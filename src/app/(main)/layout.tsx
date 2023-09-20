@@ -1,5 +1,4 @@
 import { SideMenu } from '@/containers/SideMenu';
-import { UserButton } from '@clerk/nextjs';
 
 type MainLayoutProps = {
   children: React.ReactNode;
@@ -8,15 +7,15 @@ type MainLayoutProps = {
 export default function MainLayout({ children }: MainLayoutProps) {
   return (
     <section className="flex h-screen flex-row">
-      <aside className="w-80 bg-zinc-950">
+      <aside className="flex max-w-[theme(spacing.80)] justify-start">
         <SideMenu />
       </aside>
-      <main className="flex w-screen flex-col">
-        <header className="flex h-16 items-center justify-between px-6">
-          <span>&nbsp;</span>
-          <UserButton afterSignOutUrl="/" />
-        </header>
-        <section className="flex p-6">{children}</section>
+      <main className="flex flex-1 flex-col">
+        <section className="flex flex-1 flex-col items-center p-6">
+          <main className="flex w-full max-w-screen-xl flex-1 p-8">
+            {children}
+          </main>
+        </section>
       </main>
     </section>
   );
