@@ -1,4 +1,5 @@
 import { env } from '@/lib/env.mjs';
+
 function getBaseUrl() {
   if (typeof window !== 'undefined') return '';
   if (env.VERCEL_URL) return `https://${env.VERCEL_URL}`;

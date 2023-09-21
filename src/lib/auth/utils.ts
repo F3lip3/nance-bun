@@ -9,6 +9,7 @@ type AuthSession = {
       email?: string;
     };
   } | null;
+  userId: string;
 };
 
 export const getUserAuth = async () => {
@@ -19,7 +20,8 @@ export const getUserAuth = async () => {
         user: {
           id: userId
         }
-      }
+      },
+      userId
     } as AuthSession;
   } else {
     return { session: null };

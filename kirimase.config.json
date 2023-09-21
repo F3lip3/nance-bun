@@ -1,10 +1,10 @@
 {
   "hasSrc": true,
-  "packages": ["drizzle", "clerk", "trpc", "shadcn-ui"],
+  "packages": ["prisma", "clerk", "trpc", "shadcn-ui"],
   "preferredPackageManager": "bun",
   "rootPath": "src/",
   "driver": "mysql",
   "provider": "planetscale",
-  "orm": "drizzle",
+  "orm": "prismaa",
   "auth": "clerk"
 }

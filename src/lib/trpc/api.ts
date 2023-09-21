@@ -21,9 +21,10 @@ export const api = createTRPCNextAppDirServer<typeof appRouter>({
           revalidate: 1,
           router: appRouter,
           async createContext() {
-            const { session } = await getUserAuth();
+            const { session, userId } = await getUserAuth();
             return {
               session,
+              userId,
               headers: {
                 cookie: cookies().toString(),
                 'x-trpc-source': 'rsc-invoke'
