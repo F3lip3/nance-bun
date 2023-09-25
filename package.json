@@ -10,6 +10,9 @@
     "format": "prettier --write .",
     "check-format": "prettier --check ."
   },
+  "prisma": {
+    "seed": "bun run prisma/seed.ts"
+  },
   "dependencies": {
     "@clerk/nextjs": "^4.23.5",
     "@hookform/resolvers": "^3.3.1",

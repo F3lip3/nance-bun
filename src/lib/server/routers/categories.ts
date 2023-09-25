@@ -8,15 +8,15 @@ export const categoriesRouter = router({
     .input(z.object({ name: z.string() }))
     .output(z.object({ id: z.string(), name: z.string() }))
     .mutation(async ({ ctx: { userId }, input: { name } }) => {
-      const newCategory = await prisma.categories.create({
+      const newCategory = await prisma.category.create({
         data: {
           name,
-          userId
+          user_id: userId
         }
       });
 
       return {
-        id: newCategory.publicId,
+        id: newCategory.id,
         name: newCategory.name
       };
     }),
@@ -30,12 +30,12 @@ export const categoriesRouter = router({
       )
     )
     .query(async ({ ctx: { userId } }) => {
-      const categories = await prisma.categories.findMany({
-        where: { userId, status: 'active' }
+      const categories = await prisma.category.findMany({
+        where: { user_id: userId, status: 'active' }
       });
 
       return categories.map(category => ({
-        id: category.publicId,
+        id: category.id,
         name: category.name
       }));
     })
