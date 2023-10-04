@@ -114,7 +114,7 @@ export const CategorySelector = ({ form }: CategorySelectorProps) => {
                 {categories.length === 0 && (
                   <section className="flex flex-col gap-2 p-4">
                     <small>No categories found!</small>
-                    <div className="flex flex-row">
+                    <div className="flex flex-row gap-2">
                       <Input
                         type="text"
                         placeholder="New category name..."

@@ -8,9 +8,10 @@ datasource db {
   url          = env("DATABASE_URL")
 }
 
-enum Status {
-  ACTIVE
-  REMOVED
+enum AssetType {
+  CRYPTO
+  REIT
+  STOCK
 }
 
 enum CategoryStatus {
@@ -24,15 +25,20 @@ enum TransactionType {
   SELL
 }
 
+enum Status {
+  ACTIVE
+  REMOVED
+}
+
 model Asset {
   id                String                 @id @default(cuid())
   code              String                 @unique @db.VarChar(100)
   exchange          String                 @db.VarChar(10)
   shortname         String                 @db.VarChar(500)
-  type              String                 @db.VarChar(100)
-  sector            String                 @db.VarChar(500)
-  industry          String                 @db.VarChar(1000)
+  sector            String?                @db.VarChar(500)
+  industry          String?                @db.VarChar(1000)
   longname          String
+  type              AssetType              @default(STOCK)
   status            Status                 @default(ACTIVE)
   historical_prices AssetHistoricalPrice[]
   holdings          Holding[]
@@ -72,10 +78,11 @@ model Category {
 }
 
 model Currency {
-  id        String      @id @default(cuid())
-  code      String      @unique @db.VarChar(10)
-  name      String      @db.VarChar(200)
-  portfolio Portfolio[]
+  id          String        @id @default(cuid())
+  code        String        @unique @db.VarChar(10)
+  name        String        @db.VarChar(200)
+  portfolio   Portfolio[]
+  Transaction Transaction[]
 
   @@map(name: "currencies")
 }
@@ -120,6 +127,8 @@ model Transaction {
   portfolio_id   String
   asset          Asset           @relation(fields: [asset_id], references: [id])
   asset_id       String
+  currency       Currency        @relation(fields: [currency_id], references: [id])
+  currency_id    String
   shares         Decimal
   cost_per_share Decimal
   type           TransactionType
@@ -127,5 +136,6 @@ model Transaction {
 
   @@index([portfolio_id])
   @@index([asset_id])
+  @@index([currency_id])
   @@map(name: "transactions")
 }
