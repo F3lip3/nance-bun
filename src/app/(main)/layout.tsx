@@ -1,4 +1,6 @@
-import { SideMenu } from '@/containers/SideMenu';
+import { Header } from '@/containers/Header';
+import { Menu } from '@/containers/Menu';
+import { PortfolioProvider } from '@/contexts/PortfolioContext';
 
 type MainLayoutProps = {
   children: React.ReactNode;
@@ -6,17 +8,12 @@ type MainLayoutProps = {
 
 export default function MainLayout({ children }: MainLayoutProps) {
   return (
-    <section className="flex h-screen flex-row">
-      <aside className="flex max-w-[theme(spacing.80)] justify-start">
-        <SideMenu />
-      </aside>
-      <main className="flex flex-1 flex-col">
-        <section className="flex flex-1 flex-col items-center p-6">
-          <main className="flex w-full max-w-screen-xl flex-1 p-8">
-            {children}
-          </main>
-        </section>
-      </main>
-    </section>
+    <PortfolioProvider>
+      <section className="flex h-screen flex-col">
+        <Header />
+        <Menu />
+        <main className="flex h-full flex-col px-4 py-8">{children}</main>
+      </section>
+    </PortfolioProvider>
   );
 }

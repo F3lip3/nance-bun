@@ -1,12 +1,15 @@
-import { CurrencySelector } from '@/app/(main)/(investments)/portfolios/components/CurrencySelector';
+import { useForm } from 'react-hook-form';
+import z from 'zod';
+
+import { CurrencySelector } from '@/components/CurrencySelector';
 import { Heading } from '@/components/Heading';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
-  DialogTitle,
-  DialogTrigger
+  DialogTitle
 } from '@/components/ui/dialog';
 import {
   Form,
@@ -18,15 +21,16 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/use-toast';
+import { usePortfolio } from '@/hooks/usePortfolio';
+import { PortfolioEntity } from '@/lib/server/routers/portfolios';
 import { trpc } from '@/lib/trpc/client';
+import { cn } from '@/lib/utils/functions';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Plus } from '@phosphor-icons/react';
-import { useForm } from 'react-hook-form';
-import z from 'zod';
+import { ReloadIcon } from '@radix-ui/react-icons';
 
 type AddPortfolioProps = {
   insideDialog: boolean;
-  success: () => void;
+  success: (portfolio: PortfolioEntity) => void;
 };
 
 export const AddPortfolioSchema = z.object({
@@ -41,7 +45,9 @@ export const AddPortfolioSchema = z.object({
 export type AddPortfolioForm = z.infer<typeof AddPortfolioSchema>;
 
 export const AddPortfolio = ({ insideDialog, success }: AddPortfolioProps) => {
-  const { mutateAsync: addPortfolio } =
+  const { refetch } = usePortfolio();
+
+  const { mutateAsync: addPortfolio, isLoading } =
     trpc.portfolios.addPortfolio.useMutation();
 
   const form = useForm<AddPortfolioForm>({
@@ -49,12 +55,14 @@ export const AddPortfolio = ({ insideDialog, success }: AddPortfolioProps) => {
   });
 
   const onSubmit = async ({ name, currency_id }: AddPortfolioForm) => {
-    await addPortfolio({ name, currency_id });
+    const newPortfolio = await addPortfolio({ name, currency_id });
 
     toast({ title: 'Portfolio created!' });
 
     form.reset();
-    success();
+
+    refetch();
+    success(newPortfolio);
   };
 
   const FormContainer = () => {
@@ -67,13 +75,15 @@ export const AddPortfolio = ({ insideDialog, success }: AddPortfolioProps) => {
           <FormField
             control={form.control}
             name="name"
+            disabled={isLoading}
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Name</FormLabel>
                 <FormControl>
                   <Input
                     placeholder="New portfolio name"
-                    className="w-[340px] rounded"
+                    className="min-w-[340px] rounded"
+                    autoFocus
                     {...field}
                   />
                 </FormControl>
@@ -82,10 +92,22 @@ export const AddPortfolio = ({ insideDialog, success }: AddPortfolioProps) => {
             )}
           />
 
-          <CurrencySelector form={form} className="w-[340px] rounded" />
+          <CurrencySelector form={form} className="min-w-[340px] rounded" />
 
-          <Button type="submit" className="rounded">
-            Submit
+          <Button
+            type="submit"
+            className={cn(
+              ' gap-2 rounded',
+              isLoading && 'cursor-default opacity-70'
+            )}
+          >
+            {isLoading ? (
+              <>
+                <ReloadIcon className="animate-spin" /> wait...
+              </>
+            ) : (
+              'Submit'
+            )}
           </Button>
         </form>
       </Form>
@@ -94,20 +116,15 @@ export const AddPortfolio = ({ insideDialog, success }: AddPortfolioProps) => {
 
   if (insideDialog) {
     return (
-      <Dialog>
-        <DialogTrigger asChild>
-          <Button
-            variant="default"
-            className="absolute bottom-4 right-4 m-0 h-12 w-12 rounded-full p-0"
-          >
-            <Plus size="24" className="text-white" />
-          </Button>
-        </DialogTrigger>
-        <DialogContent>
+      <Dialog open={true} modal={true}>
+        <DialogContent showCloseButton={false}>
           <DialogHeader>
             <DialogTitle>New portfolio</DialogTitle>
+            <DialogDescription>
+              Add a new portfolio and start managing your investments...
+            </DialogDescription>
           </DialogHeader>
-          <main className="py-8">
+          <main className="py-2">
             <FormContainer />
           </main>
         </DialogContent>

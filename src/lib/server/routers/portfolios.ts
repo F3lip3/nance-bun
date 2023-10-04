@@ -13,6 +13,8 @@ const portfolioOutputSchema = z.object({
   status: z.string()
 });
 
+export type PortfolioEntity = z.infer<typeof portfolioOutputSchema>;
+
 export const portfoliosRouter = router({
   addPortfolio: protectedProcedure
     .input(

@@ -169,21 +169,8 @@ const currencies = [
 ];
 
 export async function seedCurrencies() {
-  console.info('seedCurrencies...');
   const result = await prisma.currency.createMany({
     data: currencies,
     skipDuplicates: true
   });
-
-  console.info('batch payload:', result.count);
-  // await prisma.currency.deleteMany();
-  // console.info('promise all');
-  // await Promise.all(
-  //   currencies.map(async data => {
-  //     console.info('adding', data.code);
-  //     await prisma.currency.create({
-  //       data
-  //     });
-  //   })
-  // );
 }

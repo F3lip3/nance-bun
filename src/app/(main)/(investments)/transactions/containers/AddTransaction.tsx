@@ -51,7 +51,7 @@ export const AddTransaction = () => {
           variant="default"
           className="absolute bottom-4 right-4 m-0 h-12 w-12 rounded-full p-0"
         >
-          <Plus size="24" className="text-white" />
+          <Plus size="24" />
         </Button>
       </SheetTrigger>
       <SheetContent>

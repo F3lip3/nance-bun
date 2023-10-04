@@ -5,6 +5,7 @@ import { Toaster } from '@/components/ui/toaster';
 import TrpcProvider from '@/lib/trpc/Provider';
 import { ClerkProvider } from '@clerk/nextjs';
 
+import { ThemeProvider } from '@/components/ThemeProvider';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -22,12 +23,19 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <ClerkProvider>
-          <TrpcProvider>
-            {children}
-            <Toaster />
-          </TrpcProvider>
-        </ClerkProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <ClerkProvider>
+            <TrpcProvider>
+              {children}
+              <Toaster />
+            </TrpcProvider>
+          </ClerkProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

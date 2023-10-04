@@ -14,7 +14,8 @@ import {
   FormControl,
   FormField,
   FormItem,
-  FormLabel
+  FormLabel,
+  FormMessage
 } from '@/components/ui/form';
 import {
   Popover,
@@ -69,7 +70,10 @@ export const CurrencySelector = ({
                   </Button>
                 </FormControl>
               </PopoverTrigger>
-              <PopoverContent className="w-[340px] p-0">
+              <PopoverContent
+                className="w-full min-w-[340px] p-0"
+                align="start"
+              >
                 {currencies.length === 0 ? (
                   <section className="flex flex-col gap-2 p-4">
                     <small>No currencies found!</small>
@@ -95,7 +99,7 @@ export const CurrencySelector = ({
                       <ScrollArea className="h-80">
                         {currencies.map(currency => (
                           <CommandItem
-                            value={currency.id}
+                            value={`${currency.code} - ${currency.name}`}
                             key={currency.id}
                             onSelect={() => {
                               form.setValue('currency_id', currency.id);
@@ -122,6 +126,7 @@ export const CurrencySelector = ({
           ) : (
             <Skeleton className="h-9 w-full rounded-full" />
           )}
+          <FormMessage />
         </FormItem>
       )}
     />
