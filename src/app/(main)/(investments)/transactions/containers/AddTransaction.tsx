@@ -33,7 +33,7 @@ export const AddTransaction = () => {
     resolver: zodResolver(AddTransactionFormSchema)
   });
 
-  function onSubmit(data: z.infer<typeof AddTransactionFormSchema>) {
+  function onSubmit(data: AddTransactionForm) {
     toast({
       title: 'You submitted the following values:',
       description: (
