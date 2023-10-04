@@ -36,16 +36,14 @@ export const Menu = () => {
   }, [pathname]);
 
   return (
-    <nav className="flex w-full flex-row border-b border-b-neutral-700 px-8">
+    <nav className="flex w-full flex-row gap-2 border-b px-8">
       {menuItems.map(item => (
         <Link
           key={item.name}
           href={item.href}
           className={cn(
             'mb-[-1px] border-b px-4 py-4',
-            item.active
-              ? 'border-b-blue-500'
-              : 'border-b-neutral-700 hover:border-b-slate-400'
+            item.active ? 'border-b-blue-500' : 'hover:border-b-slate-400'
           )}
         >
           {item.name}

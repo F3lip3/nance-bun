@@ -12,7 +12,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
       <section className="flex h-screen flex-col">
         <Header />
         <Menu />
-        <main className="flex h-full flex-col px-4 py-8">{children}</main>
+        <main className="flex h-full flex-col p-8">{children}</main>
       </section>
     </PortfolioProvider>
   );

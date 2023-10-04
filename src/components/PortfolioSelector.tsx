@@ -37,7 +37,7 @@ export const PortfolioSelector = () => {
         <Button
           variant="outline"
           role="combobox"
-          className="w-auto justify-between rounded border-none text-lg"
+          className="w-auto justify-between rounded border-none text-lg shadow-none"
         >
           {portfolios.find(pf => pf.id === portfolio)?.name ||
             'Select a portfolio'}
