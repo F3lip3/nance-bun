@@ -17,11 +17,22 @@ import {
   SheetTrigger
 } from '@/components/ui/sheet';
 
+import { AssetSelector } from '@/app/(main)/(investments)/transactions/components/AssetSelector';
 import { TransactionTypeSelector } from '@/app/(main)/(investments)/transactions/components/TransactionTypeSelector';
 import { Plus } from '@phosphor-icons/react';
 import { CategorySelector } from '../components/CategorySelector';
 
 export const AddTransactionFormSchema = z.object({
+  asset: z.object({
+    code: z.string(),
+    exchange: z.string(),
+    shortname: z.string(),
+    sector: z.string().optional(),
+    industry: z.string().optional(),
+    type: z.string().optional(),
+    longname: z.string(),
+    source: z.string()
+  }),
   category: z.string({
     required_error: 'Please select a category.'
   }),
@@ -71,6 +82,7 @@ export const AddTransaction = () => {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <CategorySelector form={form} />
               <TransactionTypeSelector form={form} />
+              <AssetSelector form={form} />
               <Button type="submit">Submit</Button>
             </form>
           </Form>
