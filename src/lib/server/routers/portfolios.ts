@@ -1,9 +1,10 @@
 import { z } from 'zod';
 
+import { cache } from '@/lib/server/cache';
 import { prisma } from '@/lib/server/prisma';
 import { protectedProcedure, router } from '@/lib/server/trpc';
 
-const portfolioOutputSchema = z.object({
+const portfolioSchema = z.object({
   id: z.string(),
   name: z.string(),
   currency: z.object({
@@ -13,7 +14,9 @@ const portfolioOutputSchema = z.object({
   status: z.string()
 });
 
-export type PortfolioEntity = z.infer<typeof portfolioOutputSchema>;
+const portfoliosSchema = z.array(portfolioSchema);
+
+export type PortfolioEntity = z.infer<typeof portfolioSchema>;
 
 export const portfoliosRouter = router({
   addPortfolio: protectedProcedure
@@ -23,7 +26,7 @@ export const portfoliosRouter = router({
         currency_id: z.string()
       })
     )
-    .output(portfolioOutputSchema)
+    .output(portfolioSchema)
     .mutation(async ({ ctx: { userId }, input }) => {
       const newPortfolio = await prisma.portfolio.create({
         data: {
@@ -44,12 +47,28 @@ export const portfoliosRouter = router({
         }
       });
 
-      return newPortfolio;
+      const portfolio = portfolioSchema.parse(newPortfolio);
+
+      const cacheKey = `user:${userId}-portfolios`;
+      const cachedPortfolios = await cache.get(cacheKey);
+      if (cachedPortfolios !== null) {
+        const portfolios = portfoliosSchema.parse(JSON.parse(cachedPortfolios));
+        await cache.set(cacheKey, JSON.stringify([...portfolios, portfolio]));
+        await cache.expire(cacheKey, 60 * 60 * 24);
+      }
+
+      return portfolio;
     }),
   getPortfolios: protectedProcedure
-    .output(z.array(portfolioOutputSchema))
+    .output(portfoliosSchema)
     .query(async ({ ctx: { userId } }) => {
-      const portfolios = await prisma.portfolio.findMany({
+      const cacheKey = `user:${userId}-portfolios`;
+      const cachedPortfolios = await cache.get(cacheKey);
+      if (cachedPortfolios !== null) {
+        return portfoliosSchema.parse(JSON.parse(cachedPortfolios));
+      }
+
+      const rawPortfolios = await prisma.portfolio.findMany({
         where: { user_id: userId, status: 'ACTIVE' },
         select: {
           id: true,
@@ -63,6 +82,11 @@ export const portfoliosRouter = router({
           status: true
         }
       });
+
+      const portfolios = portfoliosSchema.parse(rawPortfolios);
+
+      await cache.set(cacheKey, JSON.stringify(portfolios));
+      await cache.expire(cacheKey, 60 * 60 * 24);
 
       return portfolios;
     })

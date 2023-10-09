@@ -18,9 +18,11 @@ export type AssetEntity = z.infer<typeof AssetSchema>;
 
 export const assetsRouter = router({
   findAssets: protectedProcedure
-    .input(z.object({ code: z.string().min(1) }))
+    .input(z.object({ code: z.string().optional() }))
     .output(z.array(AssetSchema))
     .query(async ({ input: { code } }) => {
+      if (!code) return [];
+
       const provider = new YahooFinanceProvider();
       const tickers = await provider.searchTickers(code);
 
