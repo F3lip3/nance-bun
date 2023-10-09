@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { UseFormReturn } from 'react-hook-form';
+import { FieldValues, Path, PathValue, UseFormReturn } from 'react-hook-form';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -26,28 +26,31 @@ import { trpc } from '@/lib/trpc/client';
 import { cn } from '@/lib/utils/functions';
 import { CaretSortIcon, CheckIcon } from '@radix-ui/react-icons';
 
-type AssetSelectorProps = {
-  form: UseFormReturn<any, any, undefined>;
+type AssetSelectorProps<TFieldValues extends FieldValues> = {
+  form: UseFormReturn<TFieldValues>;
+  name: Path<TFieldValues>;
+  label: string;
+  placeholder: string;
 };
 
-export const AssetSelector = ({ form }: AssetSelectorProps) => {
+export const AssetSelector = <T extends FieldValues>({
+  form,
+  name,
+  label,
+  placeholder
+}: AssetSelectorProps<T>) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
 
   const { data: assets } = trpc.assets.findAssets.useQuery({ code: search });
 
-  // const assets = useMemo(() => {
-
-  //   return data;
-  // }, [search]);
-
   return (
     <FormField
       control={form.control}
-      name="asset"
+      name={name}
       render={({ field }) => (
         <FormItem className="flex flex-col">
-          <FormLabel>Asset:</FormLabel>
+          <FormLabel>{label}</FormLabel>
           <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
               <FormControl>
@@ -59,10 +62,10 @@ export const AssetSelector = ({ form }: AssetSelectorProps) => {
                     !field.value && 'text-muted-foreground'
                   )}
                 >
-                  {field.value
+                  {field.value?.code
                     ? assets?.find(asset => asset.code === field.value.code)
                         ?.code
-                    : 'Search assets'}
+                    : placeholder}
                   <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </FormControl>
@@ -70,7 +73,7 @@ export const AssetSelector = ({ form }: AssetSelectorProps) => {
             <PopoverContent className="w-[335px] p-0">
               <Command>
                 <CommandInput
-                  placeholder="Search assets..."
+                  placeholder={placeholder}
                   className="h-9"
                   value={search}
                   onValueChange={setSearch}
@@ -90,7 +93,7 @@ export const AssetSelector = ({ form }: AssetSelectorProps) => {
                       value={asset.code}
                       key={asset.code}
                       onSelect={() => {
-                        form.setValue('asset', asset);
+                        form.setValue(name, asset as PathValue<T, Path<T>>);
                         setOpen(false);
                       }}
                     >
@@ -98,7 +101,7 @@ export const AssetSelector = ({ form }: AssetSelectorProps) => {
                       <CheckIcon
                         className={cn(
                           'ml-auto h-4 w-4',
-                          asset.code === field.value.code
+                          asset.code === field.value?.code
                             ? 'opacity-100'
                             : 'opacity-0'
                         )}

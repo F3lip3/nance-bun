@@ -1,3 +1,5 @@
+import { FieldValues, Path, UseFormReturn } from 'react-hook-form';
+
 import {
   FormControl,
   FormField,
@@ -11,24 +13,34 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
-import { UseFormReturn } from 'react-hook-form';
+import { cn } from '@/lib/utils/functions';
 
-type TransactionTypeSelector = {
-  form: UseFormReturn<any, any, undefined>;
+type TransactionTypeSelector<TFieldValues extends FieldValues> = {
+  form: UseFormReturn<TFieldValues>;
+  name: Path<TFieldValues>;
+  label: string;
+  placeholder: string;
+  className?: string;
 };
 
-export const TransactionTypeSelector = ({ form }: TransactionTypeSelector) => {
+export const TransactionTypeSelector = <T extends FieldValues>({
+  form,
+  name,
+  label,
+  placeholder,
+  className
+}: TransactionTypeSelector<T>) => {
   return (
     <FormField
       control={form.control}
-      name="type"
+      name={name}
       render={({ field }) => (
-        <FormItem className="flex flex-col">
-          <FormLabel>Transaction type:</FormLabel>
+        <FormItem className={cn('flex flex-col', className)}>
+          <FormLabel>{label}</FormLabel>
           <Select onValueChange={field.onChange} defaultValue={field.value}>
             <FormControl>
               <SelectTrigger>
-                <SelectValue placeholder="Select the transaction type" />
+                <SelectValue placeholder={placeholder} />
               </SelectTrigger>
             </FormControl>
             <SelectContent>

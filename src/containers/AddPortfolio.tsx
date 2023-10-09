@@ -92,7 +92,13 @@ export const AddPortfolio = ({ insideDialog, success }: AddPortfolioProps) => {
             )}
           />
 
-          <CurrencySelector form={form} className="min-w-[340px] rounded" />
+          <CurrencySelector
+            form={form}
+            name="currency_id"
+            className="min-w-[340px] rounded"
+            label="Currency"
+            placeholder="Search currencies..."
+          />
 
           <Button
             type="submit"

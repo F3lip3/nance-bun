@@ -1,7 +1,9 @@
-import { UseFormReturn } from 'react-hook-form';
+import { useCallback, useState } from 'react';
+import { FieldValues, Path, PathValue, UseFormReturn } from 'react-hook-form';
 
 import { CaretSortIcon, CheckIcon, ReloadIcon } from '@radix-ui/react-icons';
 
+import { trpc } from '@/lib/trpc/client';
 import { cn } from '@/lib/utils/functions';
 
 import { Badge } from '@/components/ui/badge';
@@ -27,14 +29,20 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover';
 import { Skeleton } from '@/components/ui/skeleton';
-import { trpc } from '@/lib/trpc/client';
-import { useCallback, useState } from 'react';
 
-type CategorySelectorProps = {
-  form: UseFormReturn<any, any, undefined>;
+type CategorySelectorProps<TFieldValues extends FieldValues> = {
+  form: UseFormReturn<TFieldValues>;
+  name: Path<TFieldValues>;
+  label: string;
+  placeholder: string;
 };
 
-export const CategorySelector = ({ form }: CategorySelectorProps) => {
+export const CategorySelector = <T extends FieldValues>({
+  form,
+  name,
+  label,
+  placeholder
+}: CategorySelectorProps<T>) => {
   const [open, setOpen] = useState(false);
   const [addError, setAddError] = useState('');
   const [addState, setAddState] = useState('');
@@ -48,19 +56,19 @@ export const CategorySelector = ({ form }: CategorySelectorProps) => {
     trpc.categories.addCategory.useMutation();
 
   const addNewCategory = useCallback(
-    async (name: string) => {
-      if (!name) {
+    async (newCategoryName: string) => {
+      if (!newCategoryName) {
         setAddError('Category name is required.');
         return;
       }
 
       setAddState('loading');
 
-      const newCategory = await addCategory({ name });
+      const newCategory = await addCategory({ name: newCategoryName });
 
       await refetch();
 
-      form.setValue('category', newCategory.id);
+      form.setValue(name, newCategory.id as PathValue<T, Path<T>>);
 
       setOpen(false);
       setAddError('');
@@ -68,7 +76,7 @@ export const CategorySelector = ({ form }: CategorySelectorProps) => {
       setSearch('');
       setNewCategory('');
     },
-    [addCategory, form, refetch]
+    [addCategory, form, name, refetch]
   );
 
   const handleAddCategoryInputKeyboardEvent = (
@@ -86,10 +94,10 @@ export const CategorySelector = ({ form }: CategorySelectorProps) => {
   return (
     <FormField
       control={form.control}
-      name="category"
+      name={name}
       render={({ field }) => (
         <FormItem className="flex flex-col">
-          <FormLabel>Category:</FormLabel>
+          <FormLabel>{label}</FormLabel>
           {categories ? (
             <Popover open={open} onOpenChange={setOpen}>
               <PopoverTrigger asChild>
@@ -105,7 +113,7 @@ export const CategorySelector = ({ form }: CategorySelectorProps) => {
                     {field.value
                       ? categories.find(category => category.id === field.value)
                           ?.name
-                      : 'Select category'}
+                      : placeholder}
                     <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </FormControl>
@@ -164,7 +172,10 @@ export const CategorySelector = ({ form }: CategorySelectorProps) => {
                           value={category.name}
                           key={category.id}
                           onSelect={() => {
-                            form.setValue('category', category.id);
+                            form.setValue(
+                              name,
+                              category.id as PathValue<T, Path<T>>
+                            );
                             setOpen(false);
                           }}
                         >

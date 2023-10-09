@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { UseFormReturn } from 'react-hook-form';
+import { FieldValues, Path, PathValue, UseFormReturn } from 'react-hook-form';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -28,15 +28,21 @@ import { trpc } from '@/lib/trpc/client';
 import { cn } from '@/lib/utils/functions';
 import { CaretSortIcon, CheckIcon } from '@radix-ui/react-icons';
 
-type CurrencySelectorProps = {
+type CurrencySelectorProps<TFieldValues extends FieldValues> = {
+  form: UseFormReturn<TFieldValues>;
+  name: Path<TFieldValues>;
+  label: string;
+  placeholder: string;
   className?: string;
-  form: UseFormReturn<any, any, undefined>;
 };
 
-export const CurrencySelector = ({
+export const CurrencySelector = <T extends FieldValues>({
   className,
-  form
-}: CurrencySelectorProps) => {
+  form,
+  name,
+  label,
+  placeholder
+}: CurrencySelectorProps<T>) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
 
@@ -45,10 +51,10 @@ export const CurrencySelector = ({
   return (
     <FormField
       control={form.control}
-      name="currency_id"
+      name={name}
       render={({ field }) => (
         <FormItem className="flex flex-col">
-          <FormLabel>Currency:</FormLabel>
+          <FormLabel>{label}</FormLabel>
           {currencies ? (
             <Popover open={open} onOpenChange={setOpen}>
               <PopoverTrigger asChild>
@@ -65,7 +71,7 @@ export const CurrencySelector = ({
                     {field.value
                       ? currencies.find(currency => currency.id === field.value)
                           ?.name
-                      : 'Select currency'}
+                      : placeholder}
                     <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </FormControl>
@@ -81,7 +87,7 @@ export const CurrencySelector = ({
                 ) : (
                   <Command>
                     <CommandInput
-                      placeholder="Search currencies..."
+                      placeholder={placeholder}
                       className="h-9"
                       value={search}
                       onValueChange={setSearch}
@@ -102,7 +108,10 @@ export const CurrencySelector = ({
                             value={`${currency.code} - ${currency.name}`}
                             key={currency.id}
                             onSelect={() => {
-                              form.setValue('currency_id', currency.id);
+                              form.setValue(
+                                name,
+                                currency.id as PathValue<T, Path<T>>
+                              );
                               setOpen(false);
                             }}
                           >
