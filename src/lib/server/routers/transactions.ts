@@ -64,13 +64,20 @@ export const transactionsRouter = router({
         },
         include: {
           asset: true,
-          currency: true
+          currency: true,
+          category: {
+            select: {
+              id: true,
+              name: true
+            }
+          }
         }
       });
 
       return transactionOutputSchema.parse({
         ...newTransaction,
         cost_per_share: newTransaction.cost_per_share.toNumber(),
+        createdAt: newTransaction.created_at,
         shares: newTransaction.shares.toNumber()
       });
     })

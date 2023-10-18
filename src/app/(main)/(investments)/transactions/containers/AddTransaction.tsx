@@ -24,13 +24,10 @@ import { DatePicker } from '@/components/DatePicker';
 import { NumberInput } from '@/components/NumberInput';
 import { toast } from '@/components/ui/use-toast';
 import { usePortfolio } from '@/hooks/usePortfolio';
-import { TransactionEntity } from '@/lib/server/routers/transactions';
 import { trpc } from '@/lib/trpc/client';
 import { Plus } from '@phosphor-icons/react';
-
-type AddTransactionProps = {
-  success: (transaction: TransactionEntity) => void;
-};
+import { ReloadIcon } from '@radix-ui/react-icons';
+import { useState } from 'react';
 
 export const AddTransactionFormSchema = z.object({
   asset: z.object(
@@ -60,7 +57,9 @@ export const AddTransactionFormSchema = z.object({
 
 export type AddTransactionForm = z.infer<typeof AddTransactionFormSchema>;
 
-export const AddTransaction: React.FC<AddTransactionProps> = ({ success }) => {
+export const AddTransaction: React.FC = () => {
+  const [open, setOpen] = useState(false);
+
   const form = useForm<AddTransactionForm>({
     resolver: zodResolver(AddTransactionFormSchema),
     defaultValues: {
@@ -79,24 +78,13 @@ export const AddTransaction: React.FC<AddTransactionProps> = ({ success }) => {
       portfolio_id
     });
 
-    toast({
-      title: 'Transaction added successfully.',
-      description: (
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">
-            {JSON.stringify(newTransaction, null, 2)}
-          </code>
-        </pre>
-      )
-    });
-
     form.reset();
-    success(newTransaction);
-    console.info('new transaction', newTransaction);
+    setOpen(false);
+    toast({ title: 'Transaction added successfully.' });
   };
 
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button
           variant="default"
@@ -161,7 +149,15 @@ export const AddTransaction: React.FC<AddTransactionProps> = ({ success }) => {
                 label="Currency"
                 placeholder="Search currencies..."
               />
-              <Button type="submit">Submit</Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <ReloadIcon className="animate-spin" /> wait...
+                  </>
+                ) : (
+                  'Submit'
+                )}
+              </Button>
             </form>
           </Form>
         </main>
