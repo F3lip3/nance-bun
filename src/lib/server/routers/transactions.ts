@@ -22,7 +22,7 @@ const addTransactionSchema = z.object({
   type: z.enum(['BUY', 'SELL'])
 });
 
-const transactionOutputSchema = addTransactionSchema.extend({
+const transactionSchema = addTransactionSchema.extend({
   id: z.string(),
   createdAt: z.date(),
   currency: z.object({
@@ -35,12 +35,15 @@ const transactionOutputSchema = addTransactionSchema.extend({
   })
 });
 
-export type TransactionEntity = z.infer<typeof transactionOutputSchema>;
+const transactionsSchema = z.array(transactionSchema);
+
+export type AddTransactionEntity = z.infer<typeof addTransactionSchema>;
+export type TransactionEntity = z.infer<typeof transactionSchema>;
 
 export const transactionsRouter = router({
   addTransaction: protectedProcedure
     .input(addTransactionSchema)
-    .output(transactionOutputSchema)
+    .output(transactionSchema)
     .mutation(async ({ ctx: { userId }, input }) => {
       const { id: asset_id } = await prisma.asset.upsert({
         create: input.asset,
@@ -74,11 +77,32 @@ export const transactionsRouter = router({
         }
       });
 
-      return transactionOutputSchema.parse({
+      return transactionSchema.parse({
         ...newTransaction,
         cost_per_share: newTransaction.cost_per_share.toNumber(),
         createdAt: newTransaction.created_at,
         shares: newTransaction.shares.toNumber()
       });
+    }),
+  getTransactions: protectedProcedure
+    .output(transactionsSchema)
+    .query(async ({ ctx: { userId } }) => {
+      const dbTransactions = await prisma.transaction.findMany({
+        where: { user_id: userId },
+        include: {
+          asset: true,
+          currency: true,
+          category: {
+            select: {
+              id: true,
+              name: true
+            }
+          }
+        }
+      });
+
+      const transactions = transactionsSchema.parse(dbTransactions);
+
+      return transactions;
     })
 });

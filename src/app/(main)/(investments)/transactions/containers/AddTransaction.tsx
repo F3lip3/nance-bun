@@ -24,7 +24,7 @@ import { DatePicker } from '@/components/DatePicker';
 import { NumberInput } from '@/components/NumberInput';
 import { toast } from '@/components/ui/use-toast';
 import { usePortfolio } from '@/hooks/usePortfolio';
-import { trpc } from '@/lib/trpc/client';
+import { useTransactions } from '@/hooks/useTransactions';
 import { Plus } from '@phosphor-icons/react';
 import { ReloadIcon } from '@radix-ui/react-icons';
 import { useState } from 'react';
@@ -67,13 +67,11 @@ export const AddTransaction: React.FC = () => {
     }
   });
 
+  const { addTransaction, isSaving } = useTransactions();
   const { portfolio: portfolio_id } = usePortfolio();
 
-  const { mutateAsync: addTransaction, isLoading } =
-    trpc.transactions.addTransaction.useMutation();
-
   const onSubmit = async (data: AddTransactionForm) => {
-    const newTransaction = await addTransaction({
+    await addTransaction({
       ...data,
       portfolio_id
     });
@@ -149,8 +147,8 @@ export const AddTransaction: React.FC = () => {
                 label="Currency"
                 placeholder="Search currencies..."
               />
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? (
+              <Button type="submit" disabled={isSaving}>
+                {isSaving ? (
                   <>
                     <ReloadIcon className="animate-spin" /> wait...
                   </>
