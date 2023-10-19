@@ -1,3 +1,6 @@
+import { FieldValues, Path, UseFormReturn } from 'react-hook-form';
+import { NumericFormat } from 'react-number-format';
+
 import {
   FormControl,
   FormField,
@@ -6,7 +9,6 @@ import {
   FormMessage
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { FieldValues, Path, PathValue, UseFormReturn } from 'react-hook-form';
 
 type NumberInputProps<TFieldValues extends FieldValues> = {
   form: UseFormReturn<TFieldValues>;
@@ -25,22 +27,16 @@ export const NumberInput = <T extends FieldValues>({
     <FormField
       control={form.control}
       name={name}
-      render={({ field }) => (
+      render={({ field: { onChange, name, value } }) => (
         <FormItem>
           <FormLabel>{label}</FormLabel>
           <FormControl>
-            <Input
+            <NumericFormat
+              name={name}
+              value={value}
+              onChange={onChange}
+              customInput={Input}
               placeholder={placeholder}
-              type="number"
-              {...field}
-              onChange={e =>
-                form.setValue(
-                  name,
-                  (e.currentTarget.value
-                    ? Number(e.currentTarget.value)
-                    : '') as PathValue<T, Path<T>>
-                )
-              }
             />
           </FormControl>
           <FormMessage />
