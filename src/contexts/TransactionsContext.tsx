@@ -1,4 +1,4 @@
-import { createContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useEffect, useState } from 'react';
 
 import {
   AddTransactionEntity,
@@ -18,7 +18,7 @@ export interface TransactionsContextData {
   addTransaction: (data: AddTransactionEntity) => Promise<void>;
   isLoading: boolean;
   isSaving: boolean;
-  transactions: Transactions;
+  transactions?: Transactions;
 }
 
 export const TransactionsContext = createContext<TransactionsContextData>(
@@ -28,6 +28,7 @@ export const TransactionsContext = createContext<TransactionsContextData>(
 export const TransactionsProvider: React.FC<TransactionsProviderProps> = ({
   children
 }) => {
+  const [transactions, setTransactions] = useState<Transactions | undefined>();
   const [transactionsList, setTransactionsList] = useState<TransactionEntity[]>(
     []
   );
@@ -47,22 +48,28 @@ export const TransactionsProvider: React.FC<TransactionsProviderProps> = ({
     ]);
   };
 
-  const transactions = useMemo<Transactions>(() => {
-    return transactionsList
-      .sort((t1, t2) => t1.createdAt.getTime() - t2.createdAt.getTime())
-      .reduce<Transactions>((groups, item) => {
-        const key = item.category.name;
-        if (!groups[key]) groups[key] = [];
-        groups[key].push(item);
-        return groups;
-      }, {});
-  }, [transactionsList]);
-
   useEffect(() => {
     if (serverTransactions) {
       setTransactionsList(serverTransactions);
     }
   }, [serverTransactions]);
+
+  useEffect(() => {
+    if (!transactionsList?.length) {
+      setTransactions(undefined);
+    } else {
+      setTransactions(
+        transactionsList
+          .sort((t1, t2) => t1.created_at.getTime() - t2.created_at.getTime())
+          .reduce<Transactions>((groups, item) => {
+            const key = item.category.name;
+            if (!groups[key]) groups[key] = [];
+            groups[key].push(item);
+            return groups;
+          }, {})
+      );
+    }
+  }, [transactionsList]);
 
   return (
     <TransactionsContext.Provider

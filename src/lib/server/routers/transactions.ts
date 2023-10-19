@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/server/prisma';
 import { protectedProcedure, router } from '@/lib/server/trpc';
+import { Prisma } from '@prisma/client';
 import z from 'zod';
 
 const addTransactionSchema = z.object({
@@ -14,17 +15,25 @@ const addTransactionSchema = z.object({
     source: z.string()
   }),
   category_id: z.string(),
-  cost_per_share: z.number(),
+  cost_per_share: z
+    .unknown()
+    .transform(value =>
+      typeof value === 'number' ? value : (value as Prisma.Decimal).toNumber()
+    ),
   currency_id: z.string(),
   date: z.date(),
   portfolio_id: z.string(),
-  shares: z.number(),
+  shares: z
+    .unknown()
+    .transform(value =>
+      typeof value === 'number' ? value : (value as Prisma.Decimal).toNumber()
+    ),
   type: z.enum(['BUY', 'SELL'])
 });
 
 const transactionSchema = addTransactionSchema.extend({
   id: z.string(),
-  createdAt: z.date(),
+  created_at: z.date(),
   currency: z.object({
     code: z.string(),
     name: z.string()
@@ -80,7 +89,6 @@ export const transactionsRouter = router({
       return transactionSchema.parse({
         ...newTransaction,
         cost_per_share: newTransaction.cost_per_share.toNumber(),
-        createdAt: newTransaction.created_at,
         shares: newTransaction.shares.toNumber()
       });
     }),

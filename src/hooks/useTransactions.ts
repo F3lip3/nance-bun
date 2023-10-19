@@ -1,8 +1,9 @@
+import { useContext } from 'react';
+
 import {
   TransactionsContext,
   TransactionsContextData
 } from '@/contexts/TransactionsContext';
-import { useContext } from 'react';
 
 export const useTransactions = (): TransactionsContextData => {
   const context = useContext(TransactionsContext);
