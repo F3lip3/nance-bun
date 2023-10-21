@@ -46,12 +46,16 @@ export const AddTransactionFormSchema = z.object({
   category_id: z.string({
     required_error: 'Select a category.'
   }),
-  cost_per_share: z.number({ required_error: 'Inform the cost per share' }),
+  cost_per_share: z
+    .string({ required_error: 'Inform the cost per share' })
+    .transform(value => Number(value)),
   currency_id: z.string({ required_error: 'Set the transaction currency' }),
   date: z.date({
     required_error: 'Pick a date'
   }),
-  shares: z.number({ required_error: 'Input the amount of shares' }),
+  shares: z
+    .string({ required_error: 'Input the amount of shares' })
+    .transform(value => Number(value)),
   type: z.enum(['BUY', 'SELL'])
 });
 
@@ -71,6 +75,7 @@ export const AddTransaction: React.FC = () => {
   const { portfolio: portfolio_id } = usePortfolio();
 
   const onSubmit = async (data: AddTransactionForm) => {
+    console.info('add', data);
     await addTransaction({
       ...data,
       portfolio_id

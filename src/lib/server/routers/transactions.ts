@@ -1,7 +1,8 @@
+import z from 'zod';
+
 import { prisma } from '@/lib/server/prisma';
 import { protectedProcedure, router } from '@/lib/server/trpc';
 import { Prisma } from '@prisma/client';
-import z from 'zod';
 
 const addTransactionSchema = z.object({
   asset: z.object({
@@ -15,33 +16,39 @@ const addTransactionSchema = z.object({
     source: z.string()
   }),
   category_id: z.string(),
-  cost_per_share: z
-    .unknown()
-    .transform(value =>
-      typeof value === 'number' ? value : (value as Prisma.Decimal).toNumber()
-    ),
+  cost_per_share: z.number(),
   currency_id: z.string(),
   date: z.date(),
   portfolio_id: z.string(),
+  shares: z.number(),
+  type: z.enum(['BUY', 'SELL'])
+});
+
+const transactionSchema = z.object({
+  id: z.string(),
+  date: z.date(),
+  currency: z.object({
+    code: z.string()
+  }),
+  category: z.object({
+    name: z.string()
+  }),
+  asset: z.object({
+    code: z.string(),
+    shortname: z.string()
+  }),
   shares: z
     .unknown()
     .transform(value =>
       typeof value === 'number' ? value : (value as Prisma.Decimal).toNumber()
     ),
+  cost_per_share: z
+    .unknown()
+    .transform(value =>
+      typeof value === 'number' ? value : (value as Prisma.Decimal).toNumber()
+    ),
+  total_cost: z.number(),
   type: z.enum(['BUY', 'SELL'])
-});
-
-const transactionSchema = addTransactionSchema.extend({
-  id: z.string(),
-  created_at: z.date(),
-  currency: z.object({
-    code: z.string(),
-    name: z.string()
-  }),
-  category: z.object({
-    id: z.string(),
-    name: z.string()
-  })
 });
 
 const transactionsSchema = z.array(transactionSchema);
@@ -74,12 +81,25 @@ export const transactionsRouter = router({
           type: input.type,
           asset_id
         },
-        include: {
-          asset: true,
-          currency: true,
+        select: {
+          id: true,
+          date: true,
+          shares: true,
+          cost_per_share: true,
+          type: true,
+          asset: {
+            select: {
+              code: true,
+              shortname: true
+            }
+          },
+          currency: {
+            select: {
+              code: true
+            }
+          },
           category: {
             select: {
-              id: true,
               name: true
             }
           }
@@ -88,8 +108,9 @@ export const transactionsRouter = router({
 
       return transactionSchema.parse({
         ...newTransaction,
-        cost_per_share: newTransaction.cost_per_share.toNumber(),
-        shares: newTransaction.shares.toNumber()
+        total_cost:
+          newTransaction.shares.toNumber() *
+          newTransaction.cost_per_share.toNumber()
       });
     }),
   getTransactions: protectedProcedure
@@ -97,19 +118,39 @@ export const transactionsRouter = router({
     .query(async ({ ctx: { userId } }) => {
       const dbTransactions = await prisma.transaction.findMany({
         where: { user_id: userId },
-        include: {
-          asset: true,
-          currency: true,
+        select: {
+          id: true,
+          date: true,
+          shares: true,
+          cost_per_share: true,
+          type: true,
+          asset: {
+            select: {
+              code: true,
+              shortname: true
+            }
+          },
+          currency: {
+            select: {
+              code: true
+            }
+          },
           category: {
             select: {
-              id: true,
               name: true
             }
           }
         }
       });
 
-      const transactions = transactionsSchema.parse(dbTransactions);
+      const transactions = transactionsSchema.parse(
+        dbTransactions.map(transaction => ({
+          ...transaction,
+          total_cost:
+            transaction.shares.toNumber() *
+            transaction.cost_per_share.toNumber()
+        }))
+      );
 
       return transactions;
     })
