@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FieldValues, Path, PathValue, UseFormReturn } from 'react-hook-form';
 
 import { Badge } from '@/components/ui/badge';
@@ -41,10 +41,14 @@ export const AssetSelector = <T extends FieldValues>({
   label,
   placeholder
 }: AssetSelectorProps<T>) => {
-  const [open, setOpen] = useState(focus);
+  const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
 
   const { data: assets } = trpc.assets.findAssets.useQuery({ code: search });
+
+  useEffect(() => {
+    setOpen(focus);
+  }, [focus]);
 
   return (
     <FormField

@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { FieldValues, Path, PathValue, UseFormReturn } from 'react-hook-form';
 
 import { CaretSortIcon, CheckIcon, ReloadIcon } from '@radix-ui/react-icons';
@@ -91,6 +91,29 @@ export const CategorySelector = <T extends FieldValues>({
     }
   };
 
+  const handleCategoryChange = (category_id: string) => {
+    form.setValue(name, category_id as PathValue<T, Path<T>>);
+
+    window.localStorage.setItem('default_category', category_id);
+
+    setOpen(false);
+  };
+
+  useEffect(() => {
+    if (categories?.length) {
+      const defaultCategory = window.localStorage.getItem('default_category');
+
+      if (
+        defaultCategory &&
+        categories.some(category => category.id === defaultCategory)
+      ) {
+        form.setValue(name, defaultCategory as PathValue<T, Path<T>>);
+      } else {
+        setOpen(true);
+      }
+    }
+  }, [categories, form, name]);
+
   return (
     <FormField
       control={form.control}
@@ -99,10 +122,11 @@ export const CategorySelector = <T extends FieldValues>({
         <FormItem className="flex flex-col">
           <FormLabel>{label}</FormLabel>
           {categories ? (
-            <Popover open={open} onOpenChange={setOpen}>
+            <Popover open={open} onOpenChange={setOpen} modal={false}>
               <PopoverTrigger asChild>
                 <FormControl>
                   <Button
+                    ref={field.ref}
                     variant="outline"
                     role="combobox"
                     className={cn(
@@ -171,13 +195,7 @@ export const CategorySelector = <T extends FieldValues>({
                         <CommandItem
                           value={category.name}
                           key={category.id}
-                          onSelect={() => {
-                            form.setValue(
-                              name,
-                              category.id as PathValue<T, Path<T>>
-                            );
-                            setOpen(false);
-                          }}
+                          onSelect={() => handleCategoryChange(category.id)}
                         >
                           {category.name}
                           <CheckIcon
