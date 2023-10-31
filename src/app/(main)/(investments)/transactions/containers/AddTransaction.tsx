@@ -63,11 +63,13 @@ export type AddTransactionForm = z.infer<typeof AddTransactionFormSchema>;
 
 export const AddTransaction: React.FC = () => {
   const [open, setOpen] = useState(false);
+  const [openAssetSelector, setOpenAssetSelector] = useState(false);
 
   const form = useForm<AddTransactionForm>({
     resolver: zodResolver(AddTransactionFormSchema),
     defaultValues: {
-      type: 'BUY'
+      type: 'BUY',
+      date: new Date()
     }
   });
 
@@ -75,14 +77,24 @@ export const AddTransaction: React.FC = () => {
   const { portfolio: portfolio_id } = usePortfolio();
 
   const onSubmit = async (data: AddTransactionForm) => {
-    console.info('add', data);
     await addTransaction({
       ...data,
       portfolio_id
     });
 
-    form.reset();
-    setOpen(false);
+    form.reset({
+      asset: undefined,
+      category_id: data.category_id,
+      cost_per_share: 0,
+      currency_id: data.currency_id,
+      date: data.date,
+      shares: 0,
+      type: data.type
+    });
+
+    setOpenAssetSelector(true);
+    form.setFocus('asset', { shouldSelect: true });
+
     toast({ title: 'Transaction added successfully.' });
   };
 
@@ -130,6 +142,7 @@ export const AddTransaction: React.FC = () => {
               </section>
               <AssetSelector
                 form={form}
+                focus={openAssetSelector}
                 name="asset"
                 label="Asset"
                 placeholder="Search assets"

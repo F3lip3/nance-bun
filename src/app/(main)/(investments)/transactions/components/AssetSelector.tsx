@@ -29,17 +29,19 @@ import { CaretSortIcon, CheckIcon } from '@radix-ui/react-icons';
 type AssetSelectorProps<TFieldValues extends FieldValues> = {
   form: UseFormReturn<TFieldValues>;
   name: Path<TFieldValues>;
+  focus?: boolean;
   label: string;
   placeholder: string;
 };
 
 export const AssetSelector = <T extends FieldValues>({
+  focus = false,
   form,
   name,
   label,
   placeholder
 }: AssetSelectorProps<T>) => {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(focus);
   const [search, setSearch] = useState('');
 
   const { data: assets } = trpc.assets.findAssets.useQuery({ code: search });
@@ -73,6 +75,7 @@ export const AssetSelector = <T extends FieldValues>({
             <PopoverContent className="w-[335px] p-0">
               <Command>
                 <CommandInput
+                  {...field}
                   placeholder={placeholder}
                   className="h-9"
                   value={search}
