@@ -60,7 +60,13 @@ export const TransactionsProvider: React.FC<TransactionsProviderProps> = ({
     } else {
       setTransactions(
         transactionsList
-          .sort((t1, t2) => t1.date.getTime() - t2.date.getTime())
+          .sort((t1, t2) => {
+            if (t1.date.getTime() === t2.date.getTime()) {
+              return t1.asset.code.localeCompare(t2.asset.code);
+            }
+
+            return t1.date.getTime() - t2.date.getTime();
+          })
           .reduce<Transactions>((groups, item) => {
             const key = item.category.name;
             if (!groups[key]) groups[key] = [];
