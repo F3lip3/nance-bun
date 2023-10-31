@@ -34,6 +34,7 @@ const isAuthed = trpc.middleware(({ next, ctx }) => {
 
   return next({
     ctx: {
+      ...ctx,
       session: ctx.session,
       userId: ctx.userId
     }

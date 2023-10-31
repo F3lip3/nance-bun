@@ -1,8 +1,13 @@
+import { cookies } from 'next/headers';
+import SuperJSON from 'superjson';
+
+import { cache } from '@/lib/server/cache';
+import { prisma } from '@/lib/server/prisma';
+
 import { loggerLink } from '@trpc/client';
 import { experimental_nextCacheLink as nextCacheLink } from '@trpc/next/app-dir/links/nextCache';
 import { experimental_createTRPCNextAppDirServer as createTRPCNextAppDirServer } from '@trpc/next/app-dir/server';
-import { cookies } from 'next/headers';
-import SuperJSON from 'superjson';
+
 import { getUserAuth } from '../auth/utils';
 import { appRouter } from '../server/routers/_app';
 
@@ -22,9 +27,12 @@ export const api = createTRPCNextAppDirServer<typeof appRouter>({
           router: appRouter,
           async createContext() {
             const { session, userId } = await getUserAuth();
+
             return {
+              cache,
               session,
               userId,
+              db: prisma,
               headers: {
                 cookie: cookies().toString(),
                 'x-trpc-source': 'rsc-invoke'

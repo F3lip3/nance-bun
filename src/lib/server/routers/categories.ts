@@ -1,7 +1,5 @@
 import { z } from 'zod';
 
-import { cache } from '@/lib/server/cache';
-import { prisma } from '@/lib/server/prisma';
 import { protectedProcedure, router } from '../trpc';
 
 const categorySchema = z.object({
@@ -15,8 +13,8 @@ export const categoriesRouter = router({
   addCategory: protectedProcedure
     .input(z.object({ name: z.string() }))
     .output(categorySchema)
-    .mutation(async ({ ctx: { userId }, input: { name } }) => {
-      const newCategory = await prisma.category.create({
+    .mutation(async ({ ctx: { cache, db, userId }, input: { name } }) => {
+      const newCategory = await db.category.create({
         data: {
           name,
           user_id: userId
@@ -37,14 +35,14 @@ export const categoriesRouter = router({
     }),
   getCategories: protectedProcedure
     .output(categoriesSchema)
-    .query(async ({ ctx: { userId } }) => {
+    .query(async ({ ctx: { cache, db, userId } }) => {
       const cacheKey = `user:${userId}-categories`;
       const cachedCategories = await cache.get(cacheKey);
       if (cachedCategories !== null) {
         return categoriesSchema.parse(JSON.parse(cachedCategories));
       }
 
-      const rawCategories = await prisma.category.findMany({
+      const rawCategories = await db.category.findMany({
         where: { user_id: userId, status: 'active' }
       });
 

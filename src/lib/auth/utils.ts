@@ -12,7 +12,7 @@ type AuthSession = {
   userId: string;
 };
 
-export const getUserAuth = async () => {
+export const getUserAuth = async (): Promise<AuthSession> => {
   const { userId } = auth();
   if (userId) {
     return {
@@ -24,7 +24,7 @@ export const getUserAuth = async () => {
       userId
     } as AuthSession;
   } else {
-    return { session: null };
+    return { session: null, userId: '' };
   }
 };
 

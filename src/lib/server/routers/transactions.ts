@@ -1,6 +1,5 @@
 import z from 'zod';
 
-import { prisma } from '@/lib/server/prisma';
 import { protectedProcedure, router } from '@/lib/server/trpc';
 import { Prisma } from '@prisma/client';
 
@@ -60,8 +59,8 @@ export const transactionsRouter = router({
   addTransaction: protectedProcedure
     .input(addTransactionSchema)
     .output(transactionSchema)
-    .mutation(async ({ ctx: { userId }, input }) => {
-      const { id: asset_id } = await prisma.asset.upsert({
+    .mutation(async ({ ctx: { db, userId }, input }) => {
+      const { id: asset_id } = await db.asset.upsert({
         create: input.asset,
         update: input.asset,
         where: {
@@ -69,7 +68,7 @@ export const transactionsRouter = router({
         }
       });
 
-      const newTransaction = await prisma.transaction.create({
+      const newTransaction = await db.transaction.create({
         data: {
           user_id: userId,
           date: input.date,
@@ -115,8 +114,8 @@ export const transactionsRouter = router({
     }),
   getTransactions: protectedProcedure
     .output(transactionsSchema)
-    .query(async ({ ctx: { userId } }) => {
-      const dbTransactions = await prisma.transaction.findMany({
+    .query(async ({ ctx: { db, userId } }) => {
+      const dbTransactions = await db.transaction.findMany({
         where: { user_id: userId },
         select: {
           id: true,

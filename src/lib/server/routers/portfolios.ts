@@ -1,7 +1,5 @@
 import { z } from 'zod';
 
-import { cache } from '@/lib/server/cache';
-import { prisma } from '@/lib/server/prisma';
 import { protectedProcedure, router } from '@/lib/server/trpc';
 
 const portfolioSchema = z.object({
@@ -27,8 +25,8 @@ export const portfoliosRouter = router({
       })
     )
     .output(portfolioSchema)
-    .mutation(async ({ ctx: { userId }, input }) => {
-      const newPortfolio = await prisma.portfolio.create({
+    .mutation(async ({ ctx: { cache, db, userId }, input }) => {
+      const newPortfolio = await db.portfolio.create({
         data: {
           name: input.name,
           user_id: userId,
@@ -61,14 +59,14 @@ export const portfoliosRouter = router({
     }),
   getPortfolios: protectedProcedure
     .output(portfoliosSchema)
-    .query(async ({ ctx: { userId } }) => {
+    .query(async ({ ctx: { cache, db, userId } }) => {
       const cacheKey = `user:${userId}-portfolios`;
       const cachedPortfolios = await cache.get(cacheKey);
       if (cachedPortfolios !== null) {
         return portfoliosSchema.parse(JSON.parse(cachedPortfolios));
       }
 
-      const rawPortfolios = await prisma.portfolio.findMany({
+      const rawPortfolios = await db.portfolio.findMany({
         where: { user_id: userId, status: 'ACTIVE' },
         select: {
           id: true,
