@@ -74,11 +74,12 @@ model Category {
 }
 
 model Currency {
-  id          String        @id @default(cuid())
-  code        String        @unique @db.VarChar(10)
-  name        String        @db.VarChar(200)
-  portfolio   Portfolio[]
-  Transaction Transaction[]
+  id           String        @id @default(cuid())
+  code         String        @unique @db.VarChar(10)
+  name         String        @db.VarChar(200)
+  portfolios   Portfolio[]
+  transactions Transaction[]
+  holdings     Holding[]
 
   @@map(name: "currencies")
 }
@@ -89,12 +90,15 @@ model Holding {
   portfolio_id String
   asset        Asset     @relation(fields: [asset_id], references: [id])
   asset_id     String
+  currency     Currency  @relation(fields: [currency_id], references: [id])
+  currency_id  String
   transactions Int
   shares       Decimal
   average_cost Decimal
 
   @@unique([portfolio_id, asset_id])
   @@index([asset_id])
+  @@index([currency_id])
   @@map(name: "holdings")
 }
 
