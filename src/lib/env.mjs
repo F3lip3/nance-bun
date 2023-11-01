@@ -9,7 +9,7 @@ export const env = createEnv({
     DATABASE_URL: z.string().min(1),
     CACHE_URL: z.string().min(1),
     CLERK_SECRET_KEY: z.string().min(1),
-    VERCEL_URL: z.string().url().optional()
+    VERCEL_URL: z.string().optional()
   },
   client: {
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
