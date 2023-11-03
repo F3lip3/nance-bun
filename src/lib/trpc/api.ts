@@ -8,7 +8,6 @@ import { loggerLink } from '@trpc/client';
 import { experimental_nextCacheLink as nextCacheLink } from '@trpc/next/app-dir/links/nextCache';
 import { experimental_createTRPCNextAppDirServer as createTRPCNextAppDirServer } from '@trpc/next/app-dir/server';
 
-import { getUserAuth } from '../auth/utils';
 import { appRouter } from '../server/routers/_app';
 
 /**
@@ -26,12 +25,14 @@ export const api = createTRPCNextAppDirServer<typeof appRouter>({
           revalidate: 1,
           router: appRouter,
           async createContext() {
-            const { session, userId } = await getUserAuth();
-
             return {
               cache,
-              session,
-              userId,
+              session: {
+                user: {
+                  id: ''
+                }
+              },
+              userId: '',
               db: prisma,
               headers: {
                 cookie: cookies().toString(),

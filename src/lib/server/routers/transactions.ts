@@ -1,5 +1,7 @@
 import z from 'zod';
 
+import { QStashQueueProvider } from '@/lib/server/container/providers/ServerlessQueueProvider/implementations/QStashQueueProvider';
+import { computeHoldingInput } from '@/lib/server/routers/holdings';
 import { protectedProcedure, router } from '@/lib/server/trpc';
 import { Prisma } from '@prisma/client';
 
@@ -104,6 +106,19 @@ export const transactionsRouter = router({
           }
         }
       });
+
+      const queue = new QStashQueueProvider();
+      const response = await queue.publish('holdings/compute', {
+        asset_id,
+        portfolio_id: input.portfolio_id,
+        user_id: userId
+      } as computeHoldingInput);
+
+      console.info(
+        `Transaction created successfully.
+         Compute holding job message sent.
+         Id: ${response.messageId}`
+      );
 
       return transactionSchema.parse({
         ...newTransaction,

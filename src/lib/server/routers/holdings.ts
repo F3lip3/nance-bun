@@ -9,15 +9,17 @@ type computedHolding = {
   total_shares: number;
 };
 
-const computeHoldingsSchema = z.object({
+export const computeHoldingSchema = z.object({
   asset_id: z.string(),
   portfolio_id: z.string(),
   user_id: z.string()
 });
 
+export type computeHoldingInput = z.infer<typeof computeHoldingSchema>;
+
 export const holdingsRouter = router({
   computeHoldings: publicProcedure
-    .input(computeHoldingsSchema)
+    .input(computeHoldingSchema)
     .mutation(async ({ ctx, input: { asset_id, portfolio_id, user_id } }) => {
       const transactions = await ctx.db.transaction.findMany({
         select: {
@@ -31,17 +33,16 @@ export const holdingsRouter = router({
           portfolio_id,
           asset_id
         },
-        orderBy: {
-          date: 'asc',
-          type: 'asc'
-        }
+        orderBy: [{ date: 'asc' }, { type: 'asc' }]
       });
 
       if (!transactions.length) return;
 
+      const { currency_id } = transactions[0];
+
       const baseHolding = {
+        currency_id,
         average_cost: 0,
-        currency_id: '',
         shares: 0,
         total_cost: 0,
         total_shares: 0
@@ -87,6 +88,29 @@ export const holdingsRouter = router({
         { ...baseHolding }
       );
 
-      console.info('HOLDING', holding);
+      await ctx.db.holding.upsert({
+        create: {
+          user_id,
+          portfolio_id,
+          asset_id,
+          currency_id,
+          status: holding.shares ? 'ACTIVE' : 'REMOVED',
+          transactions: transactions.length,
+          shares: holding.shares,
+          average_cost: holding.average_cost,
+          removed_at: holding.shares ? null : new Date()
+        },
+        update: {
+          transactions: transactions.length,
+          shares: holding.shares,
+          average_cost: holding.average_cost
+        },
+        where: {
+          portfolio_id_asset_id: {
+            asset_id,
+            portfolio_id
+          }
+        }
+      });
     })
 });
