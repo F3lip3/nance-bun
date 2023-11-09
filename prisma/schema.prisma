@@ -85,22 +85,22 @@ model Currency {
 }
 
 model Holding {
-  id           String    @id @default(cuid())
-  user_id      String
-  portfolio    Portfolio @relation(fields: [portfolio_id], references: [id])
-  portfolio_id String
-  asset        Asset     @relation(fields: [asset_id], references: [id])
-  asset_id     String
-  currency     Currency  @relation(fields: [currency_id], references: [id])
-  currency_id  String
-  transactions Int
-  shares       Decimal
-  average_cost Decimal
-  current_cost Decimal?
-  status       Status    @default(ACTIVE)
-  created_at   DateTime  @default(now())
-  updated_at   DateTime  @updatedAt
-  removed_at   DateTime?
+  id            String    @id @default(cuid())
+  user_id       String
+  portfolio     Portfolio @relation(fields: [portfolio_id], references: [id])
+  portfolio_id  String
+  asset         Asset     @relation(fields: [asset_id], references: [id])
+  asset_id      String
+  currency      Currency  @relation(fields: [currency_id], references: [id])
+  currency_id   String
+  transactions  Int
+  shares        Decimal
+  average_cost  Decimal
+  current_price Decimal?
+  status        Status    @default(ACTIVE)
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+  removed_at    DateTime?
 
   @@unique([portfolio_id, asset_id])
   @@index([asset_id])

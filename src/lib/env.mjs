@@ -13,6 +13,9 @@ export const env = createEnv({
     QSTASH_TOKEN: z.string(),
     QSTASH_CURRENT_SIGNING_KEY: z.string(),
     QSTASH_NEXT_SIGNING_KEY: z.string(),
+    RAPIDAPI_URL: z.string(),
+    RAPIDAPI_KEY: z.string(),
+    RAPIDAPI_HOST: z.string(),
     VERCEL_URL: z.string().optional()
   },
   client: {

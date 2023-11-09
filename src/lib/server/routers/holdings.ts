@@ -112,5 +112,63 @@ export const holdingsRouter = router({
           }
         }
       });
+    }),
+  getAssets: publicProcedure
+    .input(
+      z.object({
+        user_id: z.string()
+      })
+    )
+    .output(
+      z.array(
+        z.object({
+          id: z.string(),
+          code: z.string()
+        })
+      )
+    )
+    .query(async ({ ctx, input: { user_id } }) => {
+      const holdings = await ctx.db.holding.findMany({
+        where: {
+          user_id,
+          status: 'ACTIVE',
+          shares: {
+            gt: 0
+          }
+        },
+        select: {
+          id: true,
+          asset: {
+            select: {
+              code: true
+            }
+          }
+        }
+      });
+
+      return holdings.map(holding => ({
+        id: holding.id,
+        code: holding.asset.code
+      }));
+    }),
+  updatePrices: publicProcedure
+    .input(
+      z.array(
+        z.object({
+          id: z.string(),
+          code: z.string(),
+          price: z.number()
+        })
+      )
+    )
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db.$transaction(
+        input.map(item =>
+          ctx.db.holding.update({
+            where: { id: item.id },
+            data: { current_price: item.price }
+          })
+        )
+      );
     })
 });
