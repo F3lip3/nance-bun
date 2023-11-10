@@ -16,7 +16,6 @@ const addTransactionSchema = z.object({
     longname: z.string(),
     source: z.string()
   }),
-  category_id: z.string(),
   cost_per_share: z.number(),
   currency_id: z.string(),
   date: z.date(),
@@ -30,9 +29,6 @@ const transactionSchema = z.object({
   date: z.date(),
   currency: z.object({
     code: z.string()
-  }),
-  category: z.object({
-    name: z.string()
   }),
   asset: z.object({
     code: z.string(),
@@ -75,7 +71,6 @@ export const transactionsRouter = router({
           user_id: userId,
           date: input.date,
           portfolio_id: input.portfolio_id,
-          category_id: input.category_id,
           currency_id: input.currency_id,
           shares: input.shares,
           cost_per_share: input.cost_per_share,
@@ -97,11 +92,6 @@ export const transactionsRouter = router({
           currency: {
             select: {
               code: true
-            }
-          },
-          category: {
-            select: {
-              name: true
             }
           }
         }
@@ -147,11 +137,6 @@ export const transactionsRouter = router({
           currency: {
             select: {
               code: true
-            }
-          },
-          category: {
-            select: {
-              name: true
             }
           }
         }

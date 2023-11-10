@@ -17,7 +17,6 @@ import {
 } from '@/components/ui/sheet';
 
 import { AssetSelector } from '@/app/(main)/(investments)/transactions/components/AssetSelector';
-import { CategorySelector } from '@/app/(main)/(investments)/transactions/components/CategorySelector';
 import { TransactionTypeSelector } from '@/app/(main)/(investments)/transactions/components/TransactionTypeSelector';
 import { CurrencySelector } from '@/components/CurrencySelector';
 import { DatePicker } from '@/components/DatePicker';
@@ -43,9 +42,6 @@ export const AddTransactionFormSchema = z.object({
     },
     { required_error: 'Set an asset' }
   ),
-  category_id: z.string({
-    required_error: 'Select a category.'
-  }),
   cost_per_share: z
     .string({ required_error: 'Inform the cost per share' })
     .transform(value => Number(value)),
@@ -84,7 +80,6 @@ export const AddTransaction: React.FC = () => {
 
     form.reset({
       asset: undefined,
-      category_id: data.category_id,
       cost_per_share: 0,
       currency_id: data.currency_id,
       date: data.date,
@@ -103,7 +98,7 @@ export const AddTransaction: React.FC = () => {
       <SheetTrigger asChild>
         <Button
           variant="default"
-          className="absolute bottom-4 right-4 m-0 h-12 w-12 rounded-full p-0"
+          className="fixed bottom-4 right-4 m-0 h-12 w-12 rounded-full p-0"
         >
           <Plus size="24" />
         </Button>
@@ -118,12 +113,6 @@ export const AddTransaction: React.FC = () => {
         <main className="py-8">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <CategorySelector
-                form={form}
-                name="category_id"
-                label="Category"
-                placeholder="Select category"
-              />
               <section className="flex flex-row flex-nowrap gap-4">
                 <TransactionTypeSelector
                   form={form}

@@ -29,14 +29,17 @@ export const DataTable = <TData, TValue>({
   });
 
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
+    <div className="max-h-[calc(100vh-360px)] overflow-y-auto overflow-x-hidden rounded-md border">
+      <Table className="table-fixed border-separate border-spacing-x-0 border-spacing-y-1">
+        <TableHeader className="sticky top-0 m-0 bg-zinc-950">
           {table.getHeaderGroups().map(headerGroup => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map(header => {
                 return (
-                  <TableHead key={header.id}>
+                  <TableHead
+                    key={header.id}
+                    className="border-separate border-spacing-1 border-b"
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -57,7 +60,10 @@ export const DataTable = <TData, TValue>({
                 data-state={row.getIsSelected() && 'selected'}
               >
                 {row.getVisibleCells().map(cell => (
-                  <TableCell key={cell.id}>
+                  <TableCell
+                    key={cell.id}
+                    className="border-separate border-spacing-1 border-b"
+                  >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 ))}

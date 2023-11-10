@@ -61,14 +61,14 @@ model AssetHistoricalPrice {
 }
 
 model Category {
-  id           String         @id @default(cuid())
-  user_id      String         @db.VarChar(160)
-  name         String         @db.VarChar(80)
-  status       CategoryStatus @default(active)
-  created_at   DateTime       @default(now()) @db.Timestamp(0)
-  updated_at   DateTime       @default(now()) @db.Timestamp(0)
-  removed_at   DateTime?      @db.Timestamp(0)
-  transactions Transaction[]
+  id         String         @id @default(cuid())
+  user_id    String         @db.VarChar(160)
+  name       String         @db.VarChar(80)
+  status     CategoryStatus @default(active)
+  created_at DateTime       @default(now()) @db.Timestamp(0)
+  updated_at DateTime       @default(now()) @db.Timestamp(0)
+  removed_at DateTime?      @db.Timestamp(0)
+  holdings   Holding[]
 
   @@unique([user_id, name])
   @@map(name: "categories")
@@ -94,6 +94,8 @@ model Holding {
   asset_id     String
   currency     Currency  @relation(fields: [currency_id], references: [id])
   currency_id  String
+  category     Category? @relation(fields: [category_id], references: [id])
+  category_id  String?
   transactions Int
   shares       Decimal
   average_cost Decimal
@@ -104,6 +106,7 @@ model Holding {
 
   @@unique([portfolio_id, asset_id])
   @@index([asset_id])
+  @@index([category_id])
   @@index([currency_id])
   @@map(name: "holdings")
 }
@@ -133,8 +136,6 @@ model Transaction {
   portfolio_id   String
   asset          Asset           @relation(fields: [asset_id], references: [id])
   asset_id       String
-  category       Category        @relation(fields: [category_id], references: [id])
-  category_id    String
   currency       Currency        @relation(fields: [currency_id], references: [id])
   currency_id    String
   shares         Decimal
@@ -143,7 +144,6 @@ model Transaction {
   created_at     DateTime        @default(now())
 
   @@index([asset_id])
-  @@index([category_id])
   @@index([currency_id])
   @@index([portfolio_id])
   @@map(name: "transactions")

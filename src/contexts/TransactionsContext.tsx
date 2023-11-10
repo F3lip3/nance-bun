@@ -10,15 +10,11 @@ interface TransactionsProviderProps {
   children: React.ReactNode;
 }
 
-type Transactions = {
-  [category: string]: TransactionEntity[];
-};
-
 export interface TransactionsContextData {
   addTransaction: (data: AddTransactionEntity) => Promise<void>;
   isLoading: boolean;
   isSaving: boolean;
-  transactions?: Transactions;
+  transactions?: TransactionEntity[];
 }
 
 export const TransactionsContext = createContext<TransactionsContextData>(
@@ -28,7 +24,7 @@ export const TransactionsContext = createContext<TransactionsContextData>(
 export const TransactionsProvider: React.FC<TransactionsProviderProps> = ({
   children
 }) => {
-  const [transactions, setTransactions] = useState<Transactions | undefined>();
+  const [transactions, setTransactions] = useState<TransactionEntity[]>([]);
   const [transactionsList, setTransactionsList] = useState<TransactionEntity[]>(
     []
   );
@@ -56,23 +52,16 @@ export const TransactionsProvider: React.FC<TransactionsProviderProps> = ({
 
   useEffect(() => {
     if (!transactionsList?.length) {
-      setTransactions(undefined);
+      setTransactions([]);
     } else {
       setTransactions(
-        transactionsList
-          .sort((t1, t2) => {
-            if (t1.date.getTime() === t2.date.getTime()) {
-              return t1.asset.code.localeCompare(t2.asset.code);
-            }
+        transactionsList.sort((t1, t2) => {
+          if (t1.date.getTime() === t2.date.getTime()) {
+            return t1.asset.code.localeCompare(t2.asset.code);
+          }
 
-            return t1.date.getTime() - t2.date.getTime();
-          })
-          .reduce<Transactions>((groups, item) => {
-            const key = item.category.name;
-            if (!groups[key]) groups[key] = [];
-            groups[key].push(item);
-            return groups;
-          }, {})
+          return t1.date.getTime() - t2.date.getTime();
+        })
       );
     }
   }, [transactionsList]);
