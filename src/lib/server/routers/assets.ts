@@ -1,7 +1,8 @@
 import z from 'zod';
 
 import { YahooFinanceProvider } from '@/lib/server/container/providers/FinanceProvider/implementations/YahooFinance/YahooFinanceProvider';
-import { protectedProcedure, router } from '../trpc';
+import { Prisma } from '@prisma/client';
+import { protectedProcedure, publicProcedure, router } from '../trpc';
 
 export const AssetSchema = z.object({
   code: z.string(),
@@ -13,6 +14,21 @@ export const AssetSchema = z.object({
   longname: z.string(),
   source: z.string()
 });
+
+const AssetsSchema = z.array(
+  z.object({
+    id: z.string(),
+    code: z.string(),
+    current_price: z
+      .unknown()
+      .optional()
+      .transform(value =>
+        !value || typeof value === 'number'
+          ? ((value ?? 0) as number)
+          : (value as Prisma.Decimal).toNumber()
+      )
+  })
+);
 
 export type AssetEntity = z.infer<typeof AssetSchema>;
 
@@ -29,5 +45,36 @@ export const assetsRouter = router({
       if (!tickers.length) return [];
 
       return tickers.map(ticker => AssetSchema.parse(ticker));
+    }),
+  getAllAssets: publicProcedure.output(AssetsSchema).query(async ({ ctx }) => {
+    const assets = await ctx.db.asset.findMany({
+      where: { status: 'ACTIVE' },
+      select: {
+        id: true,
+        code: true,
+        current_price: true
+      }
+    });
+
+    return AssetsSchema.parse(assets);
+  }),
+  updatePrices: publicProcedure
+    .input(
+      z.array(
+        z.object({
+          id: z.string(),
+          current_price: z.number()
+        })
+      )
+    )
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db.$transaction(
+        input.map(({ id, current_price }) =>
+          ctx.db.asset.update({
+            where: { id },
+            data: { current_price }
+          })
+        )
+      );
     })
 });

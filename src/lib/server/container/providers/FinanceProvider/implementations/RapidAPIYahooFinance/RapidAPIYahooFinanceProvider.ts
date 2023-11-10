@@ -1,8 +1,5 @@
 import { env } from '@/lib/env.mjs';
-import {
-  FetchTickerPriceEntity,
-  FetchTickerPriceResponse
-} from '@/lib/server/container/providers/FinanceProvider/entities/FetchTickerPriceEntity';
+import { FetchTickerPriceEntity } from '@/lib/server/container/providers/FinanceProvider/entities/FetchTickerPriceEntity';
 import { TickerEntity } from '@/lib/server/container/providers/FinanceProvider/entities/TickerEntity';
 import { IFinanceProvider } from '@/lib/server/container/providers/FinanceProvider/interfaces/IFinanceProvider';
 import { z } from 'zod';
@@ -23,7 +20,7 @@ const RapidAPIResponseSchema = z.object({
 export class RapidAPIYahooFinanceProvider implements IFinanceProvider {
   public async fetchTickersPrices(
     tickers: FetchTickerPriceEntity[]
-  ): Promise<FetchTickerPriceResponse[]> {
+  ): Promise<FetchTickerPriceEntity[]> {
     const tickersList = tickers.map(tc => tc.code).join(',');
     const response = await fetch(
       `${RAPIDAPI_URL}/api/yahoo/qu/quote/${tickersList}`,
@@ -45,14 +42,14 @@ export class RapidAPIYahooFinanceProvider implements IFinanceProvider {
       if (ticker) {
         return {
           ...ticker,
-          price: item.regularMarketPrice
+          current_price: item.regularMarketPrice
         };
       }
 
       return {
         id: '',
         code: item.symbol,
-        price: item.regularMarketPrice
+        current_price: item.regularMarketPrice
       };
     });
 

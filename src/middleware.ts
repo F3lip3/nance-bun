@@ -6,7 +6,7 @@ import { authMiddleware } from '@clerk/nextjs';
 export default authMiddleware({
   ignoredRoutes: [
     '/api/jobs/holdings/compute',
-    '/api/jobs/holdings/fetch-prices'
+    '/api/jobs/assets/prices/update'
   ]
 });
 

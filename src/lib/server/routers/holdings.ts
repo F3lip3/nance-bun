@@ -150,25 +150,5 @@ export const holdingsRouter = router({
         id: holding.id,
         code: holding.asset.code
       }));
-    }),
-  updatePrices: publicProcedure
-    .input(
-      z.array(
-        z.object({
-          id: z.string(),
-          code: z.string(),
-          price: z.number()
-        })
-      )
-    )
-    .mutation(async ({ ctx, input }) => {
-      await ctx.db.$transaction(
-        input.map(item =>
-          ctx.db.holding.update({
-            where: { id: item.id },
-            data: { current_price: item.price }
-          })
-        )
-      );
     })
 });
