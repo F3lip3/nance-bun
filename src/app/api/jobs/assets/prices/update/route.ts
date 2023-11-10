@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import { verifySignature } from '@upstash/qstash/nextjs';
+import { verifySignature } from '@upstash/qstash/dist/nextjs';
 
 import { api } from '@/lib/trpc/api';
 
