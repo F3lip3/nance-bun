@@ -1,9 +1,6 @@
 import z from 'zod';
 
-import {
-  FetchTickerPriceEntity,
-  FetchTickerPriceResponse
-} from '@/lib/server/container/providers/FinanceProvider/entities/FetchTickerPriceEntity';
+import { FetchTickerPriceEntity } from '@/lib/server/container/providers/FinanceProvider/entities/FetchTickerPriceEntity';
 import { TickerEntity } from '../../entities/TickerEntity';
 import { IFinanceProvider } from '../../interfaces/IFinanceProvider';
 import { QuoteSchema } from './entities/Quote';
@@ -18,7 +15,7 @@ const YahooSearchSchema = z.object({
 export class YahooFinanceProvider implements IFinanceProvider {
   public async fetchTickersPrices(
     tickers: FetchTickerPriceEntity[]
-  ): Promise<FetchTickerPriceResponse[]> {
+  ): Promise<FetchTickerPriceEntity[]> {
     throw new Error('Method not implemented.');
   }
 

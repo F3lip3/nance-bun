@@ -1,12 +1,9 @@
-import {
-  FetchTickerPriceEntity,
-  FetchTickerPriceResponse
-} from '../entities/FetchTickerPriceEntity';
+import { FetchTickerPriceEntity } from '../entities/FetchTickerPriceEntity';
 import { TickerEntity } from '../entities/TickerEntity';
 
 export interface IFinanceProvider {
   fetchTickersPrices(
     tickers: FetchTickerPriceEntity[]
-  ): Promise<FetchTickerPriceResponse[]>;
+  ): Promise<FetchTickerPriceEntity[]>;
   searchTickers(ticker: string): Promise<TickerEntity[]>;
 }
