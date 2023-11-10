@@ -1,14 +1,12 @@
 import { NextResponse } from 'next/server';
 
-import { verifySignature } from '@upstash/qstash/dist/nextjs';
-
-import { api } from '@/lib/trpc/api';
+import { verifySignatureEdge } from '@upstash/qstash/dist/nextjs';
 
 import { RapidAPIYahooFinanceProvider } from '@/lib/server/container/providers/FinanceProvider/implementations/RapidAPIYahooFinance/RapidAPIYahooFinanceProvider';
+import { api } from '@/lib/trpc/api';
 
 const handler = async () => {
   const assets = await api.assets.getAllAssets.query();
-
   const financeAPI = new RapidAPIYahooFinanceProvider();
   const updatedPrices = await financeAPI.fetchTickersPrices(assets);
 
@@ -27,4 +25,4 @@ const handler = async () => {
   });
 };
 
-export const POST = verifySignature(handler);
+export const POST = verifySignatureEdge(handler);
