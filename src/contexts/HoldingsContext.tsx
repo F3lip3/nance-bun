@@ -2,6 +2,7 @@
 
 import { createContext, useEffect, useState } from 'react';
 
+import { usePortfolio } from '@/hooks/usePortfolio';
 import { HoldingEntity } from '@/lib/server/routers/holdings';
 import { trpc } from '@/lib/trpc/client';
 
@@ -21,10 +22,12 @@ export const HoldingsContext = createContext<HoldingsContextData>(
 export const HoldingsProvider: React.FC<HoldingsProviderProps> = ({
   children
 }) => {
+  const { portfolio } = usePortfolio();
+
   const [holdings, setHoldings] = useState<HoldingEntity[]>([]);
 
   const { data: serverHoldings, isLoading } =
-    trpc.holdings.getHoldings.useQuery();
+    trpc.holdings.getHoldings.useQuery({ portfolio_id: portfolio });
 
   useEffect(() => {
     if (!serverHoldings?.length) {

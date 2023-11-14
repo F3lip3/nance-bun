@@ -84,10 +84,20 @@ const holdingSchema = z
     }
   }));
 
+const holdingsSchema = z.array(holdingSchema).transform(holdings => {
+  const total = holdings.reduce((acc, curr) => acc + curr.total_price, 0.0);
+  console.info('TOTAL', total);
+  return holdings.map(holding => ({
+    ...holding,
+    weight: holding.total_price / total
+  }));
+});
+
 export type AssetEntity = z.infer<typeof assetSchema>;
 export type ComputeHoldingInput = z.infer<typeof computeHoldingSchema>;
 export type HoldingGainEntity = z.infer<typeof holdingGainSchema>;
 export type HoldingEntity = z.infer<typeof holdingSchema>;
+export type HoldingsEntity = z.infer<typeof holdingsSchema>;
 
 export const holdingsRouter = router({
   computeHoldings: publicProcedure
@@ -186,11 +196,12 @@ export const holdingsRouter = router({
       });
     }),
   getHoldings: protectedProcedure
-    .output(z.array(holdingSchema))
-    .query(async ({ ctx }) => {
+    .input(z.object({ portfolio_id: z.string() }))
+    .output(holdingsSchema)
+    .query(async ({ ctx, input: { portfolio_id } }) => {
       const holdings = await ctx.db.holding.findMany({
         where: {
-          user_id: ctx.userId,
+          portfolio_id,
           status: 'ACTIVE',
           shares: {
             gt: 0

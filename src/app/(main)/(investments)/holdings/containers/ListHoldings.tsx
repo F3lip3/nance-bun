@@ -34,21 +34,23 @@ const columns: ColumnDef<HoldingEntity>[] = [
   },
   {
     header: 'Average Cost',
-    accessorFn: data => formatNumber(data.average_cost, data.currency.code)
+    accessorFn: data =>
+      formatNumber(data.average_cost, { currency: data.currency.code })
   },
   {
     header: 'Current Price',
     accessorFn: data =>
-      formatNumber(data.asset.current_price, data.currency.code)
+      formatNumber(data.asset.current_price, { currency: data.currency.code })
   },
   {
     header: 'Total',
-    accessorFn: data => formatNumber(data.total_price, data.currency.code)
+    accessorFn: data =>
+      formatNumber(data.total_price, { currency: data.currency.code })
   },
   {
     header: 'Total Gain',
-    accessorFn: data => ({ ...data.total_gain, currency: data.currency.code }),
     meta: { align: 'center' },
+    accessorFn: data => ({ ...data.total_gain, currency: data.currency.code }),
     cell: info => {
       const gain = info.getValue<TotalGain>();
       return (
@@ -63,11 +65,18 @@ const columns: ColumnDef<HoldingEntity>[] = [
           </div>
           <div className="flex flex-col">
             <div>{formatNumber(gain.percentage)}%</div>
-            <small>{formatNumber(gain.value, gain.currency)}</small>
+            <small>
+              {formatNumber(gain.value, { currency: gain.currency })}
+            </small>
           </div>
         </div>
       );
     }
+  },
+  {
+    header: 'Weight',
+    meta: { align: 'center' },
+    accessorFn: data => `${formatNumber(data.weight, { style: 'percent' })}`
   }
 ];
 

@@ -25,11 +25,13 @@ const columns: ColumnDef<TransactionEntity>[] = [
   },
   {
     header: 'Cost per Share',
-    accessorFn: data => formatNumber(data.cost_per_share, data.currency.code)
+    accessorFn: data =>
+      formatNumber(data.cost_per_share, { currency: data.currency.code })
   },
   {
     header: 'Total Cost',
-    accessorFn: data => formatNumber(data.total_cost, data.currency.code)
+    accessorFn: data =>
+      formatNumber(data.total_cost, { currency: data.currency.code })
   }
 ];
 
