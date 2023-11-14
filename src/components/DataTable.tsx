@@ -1,3 +1,12 @@
+'use client';
+
+import {
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  useReactTable
+} from '@tanstack/react-table';
+
 import {
   Table,
   TableBody,
@@ -6,12 +15,7 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table';
-import {
-  ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  useReactTable
-} from '@tanstack/react-table';
+import { cn } from '@/lib/utils/functions';
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -30,7 +34,7 @@ export const DataTable = <TData, TValue>({
 
   return (
     <div className="max-h-[calc(100vh-360px)] overflow-y-auto overflow-x-hidden rounded-md border">
-      <Table className="table-fixed border-separate border-spacing-x-0 border-spacing-y-1">
+      <Table className="table-fixed border-separate border-spacing-x-0 border-spacing-y-0">
         <TableHeader className="sticky top-0 m-0 bg-zinc-950">
           {table.getHeaderGroups().map(headerGroup => (
             <TableRow key={headerGroup.id}>
@@ -38,7 +42,13 @@ export const DataTable = <TData, TValue>({
                 return (
                   <TableHead
                     key={header.id}
-                    className="border-separate border-spacing-1 border-b"
+                    className={cn(
+                      'border-separate border-spacing-1 border-b text-left',
+                      (header.column.columnDef.meta as any)?.align ===
+                        'center' && 'text-center',
+                      (header.column.columnDef.meta as any)?.align ===
+                        'right' && 'text-right'
+                    )}
                   >
                     {header.isPlaceholder
                       ? null
@@ -62,7 +72,13 @@ export const DataTable = <TData, TValue>({
                 {row.getVisibleCells().map(cell => (
                   <TableCell
                     key={cell.id}
-                    className="border-separate border-spacing-1 border-b"
+                    className={cn(
+                      'border-separate border-spacing-1 border-b text-left',
+                      (cell.column.columnDef.meta as any)?.align === 'center' &&
+                        'text-center',
+                      (cell.column.columnDef.meta as any)?.align === 'right' &&
+                        'text-right'
+                    )}
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>

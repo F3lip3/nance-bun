@@ -1,4 +1,5 @@
-import { publicProcedure, router } from '@/lib/server/trpc';
+import { protectedProcedure, publicProcedure, router } from '@/lib/server/trpc';
+import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 
 type computedHolding = {
@@ -15,7 +16,78 @@ export const computeHoldingSchema = z.object({
   user_id: z.string()
 });
 
-export type computeHoldingInput = z.infer<typeof computeHoldingSchema>;
+const assetSchema = z.object({
+  code: z.string(),
+  shortname: z.string(),
+  current_price: z
+    .unknown()
+    .optional()
+    .transform(value => {
+      if (!value) return 0;
+      return typeof value === 'number'
+        ? value
+        : (value as Prisma.Decimal).toNumber();
+    })
+});
+
+const holdingGainSchema = z.object({
+  percentage: z.number(),
+  value: z.number(),
+  type: z.enum(['positive', 'negative'])
+});
+
+const holdingSchema = z
+  .object({
+    id: z.string(),
+    asset: assetSchema,
+    currency: z.object({
+      code: z.string()
+    }),
+    category: z
+      .object({
+        id: z.string(),
+        name: z.string()
+      })
+      .nullable(),
+    shares: z
+      .unknown()
+      .transform(value =>
+        typeof value === 'number' ? value : (value as Prisma.Decimal).toNumber()
+      ),
+    average_cost: z
+      .unknown()
+      .transform(value =>
+        typeof value === 'number' ? value : (value as Prisma.Decimal).toNumber()
+      )
+  })
+  .transform(values => ({
+    ...values,
+    get total_price(): number {
+      return values.asset.current_price * values.shares;
+    },
+    get total_gain() {
+      const percentage =
+        values.asset.current_price / (values.average_cost / 100) - 100;
+
+      const total_price = values.asset.current_price * values.shares;
+      const total_cost = values.average_cost * values.shares;
+      const value = total_price - total_cost;
+
+      return holdingGainSchema.parse({
+        percentage,
+        value,
+        type: value > 0 ? 'positive' : 'negative'
+      });
+    },
+    get weight(): number {
+      return 0;
+    }
+  }));
+
+export type AssetEntity = z.infer<typeof assetSchema>;
+export type ComputeHoldingInput = z.infer<typeof computeHoldingSchema>;
+export type HoldingGainEntity = z.infer<typeof holdingGainSchema>;
+export type HoldingEntity = z.infer<typeof holdingSchema>;
 
 export const holdingsRouter = router({
   computeHoldings: publicProcedure
@@ -113,24 +185,12 @@ export const holdingsRouter = router({
         }
       });
     }),
-  getAssets: publicProcedure
-    .input(
-      z.object({
-        user_id: z.string()
-      })
-    )
-    .output(
-      z.array(
-        z.object({
-          id: z.string(),
-          code: z.string()
-        })
-      )
-    )
-    .query(async ({ ctx, input: { user_id } }) => {
+  getHoldings: protectedProcedure
+    .output(z.array(holdingSchema))
+    .query(async ({ ctx }) => {
       const holdings = await ctx.db.holding.findMany({
         where: {
-          user_id,
+          user_id: ctx.userId,
           status: 'ACTIVE',
           shares: {
             gt: 0
@@ -140,15 +200,27 @@ export const holdingsRouter = router({
           id: true,
           asset: {
             select: {
+              code: true,
+              shortname: true,
+              current_price: true
+            }
+          },
+          currency: {
+            select: {
               code: true
             }
-          }
+          },
+          category: {
+            select: {
+              id: true,
+              name: true
+            }
+          },
+          shares: true,
+          average_cost: true
         }
       });
 
-      return holdings.map(holding => ({
-        id: holding.id,
-        code: holding.asset.code
-      }));
+      return holdings;
     })
 });

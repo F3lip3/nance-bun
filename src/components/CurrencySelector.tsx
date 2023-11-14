@@ -46,7 +46,12 @@ export const CurrencySelector = <T extends FieldValues>({
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
 
-  const { data: currencies } = trpc.currencies.getCurrencies.useQuery();
+  const { data: currencies } = trpc.currencies.getCurrencies.useQuery(
+    undefined,
+    {
+      staleTime: Infinity
+    }
+  );
 
   return (
     <FormField

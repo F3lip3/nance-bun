@@ -23,9 +23,9 @@ export const Menu = () => {
         active: pathname.startsWith('/dashboard')
       },
       {
-        name: 'Assets',
-        href: '/assets',
-        active: pathname.startsWith('/assets')
+        name: 'Holdings',
+        href: '/holdings',
+        active: pathname.startsWith('/holdings')
       },
       {
         name: 'Transactions',

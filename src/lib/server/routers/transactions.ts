@@ -1,7 +1,7 @@
 import z from 'zod';
 
 import { QStashQueueProvider } from '@/lib/server/container/providers/ServerlessQueueProvider/implementations/QStashQueueProvider';
-import { computeHoldingInput } from '@/lib/server/routers/holdings';
+import { ComputeHoldingInput } from '@/lib/server/routers/holdings';
 import { protectedProcedure, router } from '@/lib/server/trpc';
 import { Prisma } from '@prisma/client';
 
@@ -102,7 +102,7 @@ export const transactionsRouter = router({
         asset_id,
         portfolio_id: input.portfolio_id,
         user_id: userId
-      } as computeHoldingInput);
+      } as ComputeHoldingInput);
 
       console.info(
         `Transaction created successfully.

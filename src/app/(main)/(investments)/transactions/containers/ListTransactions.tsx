@@ -1,7 +1,7 @@
 import { ColumnDef } from '@tanstack/react-table';
 import { formatInTimeZone } from 'date-fns-tz';
 
-import { DataTable } from '@/app/(main)/(investments)/transactions/components/DataTable';
+import { DataTable } from '@/components/DataTable';
 import { useTransactions } from '@/hooks/useTransactions';
 import { TransactionEntity } from '@/lib/server/routers/transactions';
 import { formatNumber } from '@/lib/utils/functions';
