@@ -1,8 +1,9 @@
 'use client';
 
-import { ListHoldings } from '@/app/(main)/(investments)/holdings/containers/ListHoldings';
 import { Heading } from '@/components/Heading';
 import { HoldingsProvider } from '@/contexts/HoldingsContext';
+
+import { HoldingsTable } from './containers/HoldingsTable';
 
 export default function Assets() {
   return (
@@ -11,7 +12,7 @@ export default function Assets() {
         <Heading size="lg" className="font-light">
           Holdings
         </Heading>
-        <ListHoldings />
+        <HoldingsTable />
       </main>
     </HoldingsProvider>
   );

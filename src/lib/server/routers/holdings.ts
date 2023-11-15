@@ -86,7 +86,6 @@ const holdingSchema = z
 
 const holdingsSchema = z.array(holdingSchema).transform(holdings => {
   const total = holdings.reduce((acc, curr) => acc + curr.total_price, 0.0);
-  console.info('TOTAL', total);
   return holdings.map(holding => ({
     ...holding,
     weight: holding.total_price / total
