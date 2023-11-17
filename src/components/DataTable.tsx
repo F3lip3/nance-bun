@@ -140,33 +140,34 @@ export const DataTable = <TData, TValue>({
             </TableRow>
           )}
         </TableBody>
-        {table.getFooterGroups().length && table.getRowModel().rows?.length && (
-          <TableFooter className="sticky bottom-0 m-0 bg-zinc-900">
-            {table.getFooterGroups().map(footerGroup => (
-              <TableRow key={footerGroup.id}>
-                {footerGroup.headers.map(footer => (
-                  <TableHead
-                    key={footer.id}
-                    className={cn(
-                      'border-separate border-spacing-1 border-t text-left',
-                      (footer.column.columnDef.meta as any)?.align ===
-                        'center' && 'text-center',
-                      (footer.column.columnDef.meta as any)?.align ===
-                        'right' && 'text-right'
-                    )}
-                  >
-                    {footer.isPlaceholder
-                      ? null
-                      : flexRender(
-                          footer.column.columnDef.footer,
-                          footer.getContext()
-                        )}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableFooter>
-        )}
+        {table.getFooterGroups().length > 0 &&
+          (table.getRowModel().rows?.length ?? 0) > 0 && (
+            <TableFooter className="sticky bottom-0 m-0 bg-zinc-900">
+              {table.getFooterGroups().map(footerGroup => (
+                <TableRow key={footerGroup.id}>
+                  {footerGroup.headers.map(footer => (
+                    <TableHead
+                      key={footer.id}
+                      className={cn(
+                        'border-separate border-spacing-1 border-t text-left',
+                        (footer.column.columnDef.meta as any)?.align ===
+                          'center' && 'text-center',
+                        (footer.column.columnDef.meta as any)?.align ===
+                          'right' && 'text-right'
+                      )}
+                    >
+                      {footer.isPlaceholder
+                        ? null
+                        : flexRender(
+                            footer.column.columnDef.footer,
+                            footer.getContext()
+                          )}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              ))}
+            </TableFooter>
+          )}
       </Table>
     </div>
   );

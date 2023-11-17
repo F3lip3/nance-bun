@@ -4,10 +4,13 @@ import { protectedProcedure, router } from '../trpc';
 
 const categorySchema = z.object({
   id: z.string(),
-  name: z.string()
+  name: z.string(),
+  holdings: z.number().optional()
 });
 
 const categoriesSchema = z.array(categorySchema);
+
+export type CategoryEntity = z.infer<typeof categorySchema>;
 
 export const categoriesRouter = router({
   addCategory: protectedProcedure
@@ -43,10 +46,20 @@ export const categoriesRouter = router({
       }
 
       const rawCategories = await db.category.findMany({
-        where: { user_id: userId, status: 'active' }
+        where: { user_id: userId, status: 'active' },
+        include: {
+          _count: {
+            select: { holdings: true }
+          }
+        }
       });
 
-      const categories = categoriesSchema.parse(rawCategories);
+      const categories = categoriesSchema.parse(
+        rawCategories.map(category => ({
+          ...category,
+          holdings: category._count.holdings
+        }))
+      );
 
       await cache.set(cacheKey, JSON.stringify(categories));
       await cache.expire(cacheKey, 60 * 60 * 24);

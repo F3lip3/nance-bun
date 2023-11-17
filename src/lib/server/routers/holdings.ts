@@ -36,13 +36,15 @@ const holdingGainSchema = z.object({
   type: z.enum(['positive', 'negative'])
 });
 
+const currencySchema = z.object({
+  code: z.string()
+});
+
 const holdingSchema = z
   .object({
     id: z.string(),
     asset: assetSchema,
-    currency: z.object({
-      code: z.string()
-    }),
+    currency: currencySchema,
     category: z
       .object({
         id: z.string(),
@@ -94,6 +96,7 @@ const holdingsSchema = z.array(holdingSchema).transform(holdings => {
 
 export type AssetEntity = z.infer<typeof assetSchema>;
 export type ComputeHoldingInput = z.infer<typeof computeHoldingSchema>;
+export type CurrencyEntity = z.infer<typeof currencySchema>;
 export type HoldingGainEntity = z.infer<typeof holdingGainSchema>;
 export type HoldingEntity = z.infer<typeof holdingSchema>;
 export type HoldingsEntity = z.infer<typeof holdingsSchema>;
@@ -195,12 +198,14 @@ export const holdingsRouter = router({
       });
     }),
   getHoldings: protectedProcedure
-    .input(z.object({ portfolio_id: z.string() }))
+    .input(z.object({ portfolio_id: z.string(), category_id: z.string() }))
     .output(holdingsSchema)
-    .query(async ({ ctx, input: { portfolio_id } }) => {
+    .query(async ({ ctx, input: { category_id, portfolio_id } }) => {
       const holdings = await ctx.db.holding.findMany({
         where: {
           portfolio_id,
+          category_id:
+            category_id && category_id !== 'all' ? category_id : null,
           status: 'ACTIVE',
           shares: {
             gt: 0

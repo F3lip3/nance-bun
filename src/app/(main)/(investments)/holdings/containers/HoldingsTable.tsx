@@ -4,13 +4,13 @@ import { useHoldings } from '@/hooks/useHoldings';
 import { holdingsColumns } from './HoldingsColumns';
 
 export const HoldingsTable: React.FC = () => {
-  const { isLoading, holdings } = useHoldings();
+  const { holdings, isLoadingHoldings } = useHoldings();
 
-  if (isLoading) return <>Loading...</>;
+  if (isLoadingHoldings) return <>Loading...</>;
   if (!holdings) return <>Empty</>;
 
   return (
-    <div className="px-2 py-10">
+    <div className="pb-10 pt-2">
       <DataTable
         columns={holdingsColumns}
         data={holdings}
