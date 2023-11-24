@@ -1,7 +1,7 @@
-import { DataTable } from '@/components/DataTable';
 import { useHoldings } from '@/hooks/useHoldings';
 
-import { holdingsColumns } from './HoldingsColumns';
+import { HoldingsDataTable } from '../components/DataTable/DataTable';
+import { HoldingsDataTableColumns } from '../components/DataTable/DataTableColumns';
 
 export const HoldingsTable: React.FC = () => {
   const { holdings, isLoadingHoldings } = useHoldings();
@@ -11,8 +11,8 @@ export const HoldingsTable: React.FC = () => {
 
   return (
     <div className="pb-10 pt-2">
-      <DataTable
-        columns={holdingsColumns}
+      <HoldingsDataTable
+        columns={HoldingsDataTableColumns}
         data={holdings}
         defaultSort={{ id: 'weight', desc: true }}
       />

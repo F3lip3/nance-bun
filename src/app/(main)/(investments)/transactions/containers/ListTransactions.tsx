@@ -1,10 +1,11 @@
 import { ColumnDef } from '@tanstack/react-table';
 import { formatInTimeZone } from 'date-fns-tz';
 
-import { DataTable } from '@/components/DataTable';
 import { useTransactions } from '@/hooks/useTransactions';
 import { TransactionEntity } from '@/lib/server/routers/transactions';
 import { formatNumber } from '@/lib/utils/functions';
+
+import { DataTable } from '../components/DataTable';
 
 const columns: ColumnDef<TransactionEntity>[] = [
   {

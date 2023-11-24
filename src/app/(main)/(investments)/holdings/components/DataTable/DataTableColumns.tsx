@@ -1,4 +1,5 @@
 import { ArrowDown, ArrowUp } from '@phosphor-icons/react';
+import { rankItem } from '@tanstack/match-sorter-utils';
 import { ColumnDef } from '@tanstack/react-table';
 
 import {
@@ -12,11 +13,12 @@ type HoldingGain = HoldingGainEntity & {
   currency: string;
 };
 
-export const holdingsColumns: ColumnDef<HoldingEntity>[] = [
+export const HoldingsDataTableColumns: ColumnDef<HoldingEntity>[] = [
   {
     accessorKey: 'asset',
     header: 'Asset',
     enableSorting: true,
+    enableColumnFilter: true,
     cell: info => {
       const asset = info.getValue<AssetEntity>();
       return (
@@ -25,6 +27,17 @@ export const holdingsColumns: ColumnDef<HoldingEntity>[] = [
           <small>{asset.shortname}</small>
         </>
       );
+    },
+    filterFn: (row, columnId, value, addMeta) => {
+      const { code, shortname } = row.getValue<AssetEntity>(columnId);
+
+      const codeRank = rankItem(code, value);
+      const shortnameRank = rankItem(shortname, value);
+
+      addMeta(codeRank);
+      addMeta(shortnameRank);
+
+      return codeRank.passed || shortnameRank.passed;
     },
     sortingFn: (rowA, rowB, columnId) => {
       const codeA = rowA.getValue<AssetEntity>(columnId).code;
@@ -35,6 +48,7 @@ export const holdingsColumns: ColumnDef<HoldingEntity>[] = [
   },
   {
     accessorKey: 'shares',
+    meta: { align: 'center' },
     accessorFn: data => formatNumber(data.shares),
     header: 'Shares',
     enableSorting: true
@@ -42,11 +56,13 @@ export const holdingsColumns: ColumnDef<HoldingEntity>[] = [
   {
     header: 'Average Cost',
     accessorKey: 'average_cost',
+    meta: { align: 'center' },
     accessorFn: data =>
       formatNumber(data.average_cost, { currency: data.currency.code })
   },
   {
     header: 'Current Price',
+    meta: { align: 'center' },
     accessorFn: data =>
       formatNumber(data.asset.current_price, { currency: data.currency.code })
   },
