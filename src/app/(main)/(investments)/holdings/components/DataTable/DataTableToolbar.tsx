@@ -1,5 +1,6 @@
 'use client';
 
+import { DataTableSetCategory } from '@/app/(main)/(investments)/holdings/components/DataTable/DataTableSetCategory';
 import { Input } from '@/components/ui/input';
 import { Table } from '@tanstack/react-table';
 
@@ -11,6 +12,8 @@ export function DataTableToolbar<TData>({
   table
 }: DataTableToolbarProps<TData>) {
   // const isFiltered = table.getState().columnFilters.length > 0;
+  const isSomeRowsSelected =
+    table?.getIsAllRowsSelected() || table?.getIsSomeRowsSelected() || false;
 
   return (
     <div className="flex items-center justify-between">
@@ -48,7 +51,8 @@ export function DataTableToolbar<TData>({
           </Button>
         )} */}
       </div>
-      <div className="flex flex-1 items-center justify-end">
+      <div className="flex flex-1 items-center justify-end animate-in animate-out">
+        {isSomeRowsSelected && <DataTableSetCategory table={table} />}
         {/* <DataTableViewOptions table={table} /> */}
       </div>
     </div>

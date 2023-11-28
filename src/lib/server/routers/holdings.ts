@@ -36,6 +36,13 @@ const holdingGainSchema = z.object({
   type: z.enum(['positive', 'negative'])
 });
 
+const categorySchema = z
+  .object({
+    id: z.string(),
+    name: z.string()
+  })
+  .nullable();
+
 const currencySchema = z.object({
   code: z.string()
 });
@@ -45,12 +52,7 @@ const holdingSchema = z
     id: z.string(),
     asset: assetSchema,
     currency: currencySchema,
-    category: z
-      .object({
-        id: z.string(),
-        name: z.string()
-      })
-      .nullable(),
+    category: categorySchema,
     shares: z
       .unknown()
       .transform(value =>
@@ -94,12 +96,19 @@ const holdingsSchema = z.array(holdingSchema).transform(holdings => {
   }));
 });
 
+const setCategorySchema = z.object({
+  category_id: z.string().nullable(),
+  holdings: z.array(z.string())
+});
+
 export type AssetEntity = z.infer<typeof assetSchema>;
+export type CategoryEntity = z.infer<typeof categorySchema>;
 export type ComputeHoldingInput = z.infer<typeof computeHoldingSchema>;
 export type CurrencyEntity = z.infer<typeof currencySchema>;
 export type HoldingGainEntity = z.infer<typeof holdingGainSchema>;
 export type HoldingEntity = z.infer<typeof holdingSchema>;
 export type HoldingsEntity = z.infer<typeof holdingsSchema>;
+export type SetCategoryEntity = z.infer<typeof setCategorySchema>;
 
 export const holdingsRouter = router({
   computeHoldings: publicProcedure
@@ -204,12 +213,11 @@ export const holdingsRouter = router({
       const holdings = await ctx.db.holding.findMany({
         where: {
           portfolio_id,
-          category_id:
-            category_id && category_id !== 'all' ? category_id : null,
           status: 'ACTIVE',
           shares: {
             gt: 0
-          }
+          },
+          ...(category_id && category_id !== 'all' ? { category_id } : {})
         },
         select: {
           id: true,
@@ -237,5 +245,20 @@ export const holdingsRouter = router({
       });
 
       return holdings;
+    }),
+  setCategory: protectedProcedure
+    .input(setCategorySchema)
+    .mutation(async ({ ctx, input: { category_id, holdings } }) => {
+      await ctx.db.holding.updateMany({
+        where: {
+          id: {
+            in: holdings
+          },
+          user_id: ctx.userId
+        },
+        data: {
+          category_id
+        }
+      });
     })
 });

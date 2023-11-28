@@ -2,6 +2,7 @@ import { ArrowDown, ArrowUp } from '@phosphor-icons/react';
 import { rankItem } from '@tanstack/match-sorter-utils';
 import { ColumnDef } from '@tanstack/react-table';
 
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   AssetEntity,
   HoldingEntity,
@@ -14,6 +15,31 @@ type HoldingGain = HoldingGainEntity & {
 };
 
 export const HoldingsDataTableColumns: ColumnDef<HoldingEntity>[] = [
+  {
+    id: 'select',
+    accessorKey: 'id',
+    header: ({ table }) => (
+      <Checkbox
+        checked={
+          table.getIsAllPageRowsSelected() ||
+          (table.getIsSomePageRowsSelected() && 'indeterminate')
+        }
+        onCheckedChange={value => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all"
+        className="translate-y-[2px]"
+      />
+    ),
+    cell: ({ row, getValue }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        value={getValue<string>()}
+        onCheckedChange={value => row.toggleSelected(!!value)}
+        aria-label="Select row"
+        className="translate-y-[2px]"
+      />
+    ),
+    enableSorting: false
+  },
   {
     accessorKey: 'asset',
     header: 'Asset',
@@ -45,6 +71,14 @@ export const HoldingsDataTableColumns: ColumnDef<HoldingEntity>[] = [
 
       return codeA > codeB ? 1 : codeA < codeB ? -1 : 0;
     }
+  },
+  {
+    accessorKey: 'category',
+    header: 'Category',
+    enableSorting: true,
+    enableColumnFilter: true,
+    meta: { align: 'center' },
+    accessorFn: data => data.category?.name ?? 'None'
   },
   {
     accessorKey: 'shares',
