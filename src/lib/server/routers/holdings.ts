@@ -207,9 +207,11 @@ export const holdingsRouter = router({
       });
     }),
   getHoldings: protectedProcedure
-    .input(z.object({ portfolio_id: z.string(), category_id: z.string() }))
+    .input(
+      z.object({ portfolio_id: z.string(), categories: z.array(z.string()) })
+    )
     .output(holdingsSchema)
-    .query(async ({ ctx, input: { category_id, portfolio_id } }) => {
+    .query(async ({ ctx, input: { categories, portfolio_id } }) => {
       const holdings = await ctx.db.holding.findMany({
         where: {
           portfolio_id,
@@ -217,7 +219,7 @@ export const holdingsRouter = router({
           shares: {
             gt: 0
           },
-          ...(category_id && category_id !== 'all' ? { category_id } : {})
+          ...(categories.length ? { category_id: { in: categories } } : {})
         },
         select: {
           id: true,

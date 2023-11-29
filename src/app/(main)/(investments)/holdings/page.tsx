@@ -1,18 +1,14 @@
 'use client';
 
-import { Heading } from '@/components/Heading';
 import { HoldingsProvider } from '@/contexts/HoldingsContext';
 
-import { HoldingsTable } from './containers/HoldingsTable';
+import { HoldingsDataTable } from './components/DataTable/DataTable';
 
 export default function Assets() {
   return (
     <HoldingsProvider>
-      <main>
-        <Heading size="lg" className="font-light">
-          Holdings
-        </Heading>
-        <HoldingsTable />
+      <main className="pb-10">
+        <HoldingsDataTable />
       </main>
     </HoldingsProvider>
   );

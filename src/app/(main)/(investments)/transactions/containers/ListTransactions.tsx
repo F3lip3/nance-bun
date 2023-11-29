@@ -48,7 +48,7 @@ export const ListTransactions: React.FC = () => {
   }
 
   return (
-    <div className="px-2 py-10">
+    <div className="pb-10">
       <DataTable columns={columns} data={transactions} />
     </div>
   );

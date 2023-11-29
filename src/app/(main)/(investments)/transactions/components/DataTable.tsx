@@ -17,7 +17,6 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableFooter,
   TableHead,
   TableHeader,
   TableRow
@@ -76,9 +75,9 @@ export const DataTable = <TData, TValue>({
   });
 
   return (
-    <div className="max-h-[calc(100vh-360px)] overflow-y-auto overflow-x-hidden rounded-md border">
+    <div className="max-h-[calc(100vh-260px)] overflow-y-auto overflow-x-hidden rounded-md border">
       <Table className="table-fixed border-separate border-spacing-x-0 border-spacing-y-0">
-        <TableHeader className="sticky top-0 m-0 bg-zinc-900">
+        <TableHeader className="sticky top-0 m-0 bg-background">
           {table.getHeaderGroups().map(headerGroup => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map(header => {
@@ -140,34 +139,6 @@ export const DataTable = <TData, TValue>({
             </TableRow>
           )}
         </TableBody>
-        {table.getFooterGroups().length > 0 &&
-          (table.getRowModel().rows?.length ?? 0) > 0 && (
-            <TableFooter className="sticky bottom-0 m-0 bg-zinc-900">
-              {table.getFooterGroups().map(footerGroup => (
-                <TableRow key={footerGroup.id}>
-                  {footerGroup.headers.map(footer => (
-                    <TableHead
-                      key={footer.id}
-                      className={cn(
-                        'border-separate border-spacing-1 border-t text-left',
-                        (footer.column.columnDef.meta as any)?.align ===
-                          'center' && 'text-center',
-                        (footer.column.columnDef.meta as any)?.align ===
-                          'right' && 'text-right'
-                      )}
-                    >
-                      {footer.isPlaceholder
-                        ? null
-                        : flexRender(
-                            footer.column.columnDef.footer,
-                            footer.getContext()
-                          )}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              ))}
-            </TableFooter>
-          )}
       </Table>
     </div>
   );

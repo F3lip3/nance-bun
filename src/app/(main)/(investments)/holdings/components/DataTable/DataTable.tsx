@@ -1,12 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import {
   Column,
-  ColumnDef,
   ColumnFiltersState,
-  ColumnSort,
   SortingState,
   flexRender,
   getCoreRowModel,
@@ -25,16 +23,15 @@ import {
   TableRow
 } from '@/components/ui/table';
 
-import { DataTableToolbar } from '@/app/(main)/(investments)/holdings/components/DataTable/DataTableToolbar';
 import { Button } from '@/components/ui/button';
+import { useHoldings } from '@/hooks/useHoldings';
 import { cn } from '@/lib/utils/functions';
 import { ArrowDown, ArrowUp } from '@phosphor-icons/react';
 
-interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[];
-  data: TData[];
-  defaultSort?: ColumnSort;
-}
+import { Skeleton } from '@/components/ui/skeleton';
+import { HoldingEntity } from '@/lib/server/routers/holdings';
+import { HoldingsDataTableColumns } from './DataTableColumns';
+import { DataTableToolbar } from './DataTableToolbar';
 
 interface SortContainerProps<TData, TValue> {
   children: React.ReactNode;
@@ -60,19 +57,32 @@ const SortContainer = <TData, TValue>({
   );
 };
 
-export const HoldingsDataTable = <TData, TValue>({
-  columns,
-  data,
-  defaultSort
-}: DataTableProps<TData, TValue>) => {
+export const HoldingsDataTable = () => {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [sorting, setSorting] = useState<SortingState>(
-    defaultSort ? [defaultSort] : []
-  );
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: 'weight', desc: true }
+  ]);
+
+  const { holdings, isLoadingHoldings } = useHoldings();
+
+  const data = useMemo<HoldingEntity[]>(() => {
+    return isLoadingHoldings
+      ? Array(10).fill({} as HoldingEntity)
+      : (holdings as HoldingEntity[]);
+  }, [isLoadingHoldings, holdings]);
+
+  const columns = useMemo(() => {
+    return isLoadingHoldings
+      ? HoldingsDataTableColumns.map(column => ({
+          ...column,
+          cell: () => <Skeleton className="my-2 h-8 w-full rounded-full" />
+        }))
+      : HoldingsDataTableColumns;
+  }, [isLoadingHoldings]);
 
   const table = useReactTable({
-    data,
     columns,
+    data,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -82,11 +92,11 @@ export const HoldingsDataTable = <TData, TValue>({
   });
 
   return (
-    <div className="mt-6 space-y-4">
+    <div className="space-y-4">
       <DataTableToolbar table={table} />
-      <div className="max-h-[calc(100vh-360px)] overflow-y-auto overflow-x-hidden rounded-md border">
+      <div className="max-h-[calc(100vh-276px)] overflow-y-auto overflow-x-hidden rounded-md border">
         <Table className="border-separate border-spacing-x-0 border-spacing-y-0">
-          <TableHeader className="sticky top-0 z-10 m-0 bg-zinc-900">
+          <TableHeader className="sticky top-0 z-10 m-0 bg-background">
             {table.getHeaderGroups().map(headerGroup => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map(header => {
@@ -154,9 +164,10 @@ export const HoldingsDataTable = <TData, TValue>({
               </TableRow>
             )}
           </TableBody>
-          {table.getFooterGroups().length > 0 &&
+          {!isLoadingHoldings &&
+            table.getFooterGroups().length > 0 &&
             (table.getRowModel().rows?.length ?? 0) > 0 && (
-              <TableFooter className="sticky bottom-0 m-0 bg-zinc-900">
+              <TableFooter className="sticky bottom-0 m-0 bg-background">
                 {table.getFooterGroups().map(footerGroup => (
                   <TableRow key={footerGroup.id}>
                     {footerGroup.headers.map(footer => (

@@ -1,6 +1,7 @@
 'use client';
 
-import { createContext } from 'react';
+import { Dispatch, SetStateAction, createContext } from 'react';
+import { useLocalStorage } from 'usehooks-ts';
 
 import { usePortfolio } from '@/hooks/usePortfolio';
 import { CategoryEntity } from '@/lib/server/routers/categories';
@@ -21,7 +22,9 @@ export interface HoldingsContextData {
   holdings?: HoldingEntity[];
   isLoadingCategories: boolean;
   isLoadingHoldings: boolean;
+  selectedCategories: string[];
   setHoldingsCategory: (props: SetHoldingsCategoryProps) => Promise<void>;
+  setSelectedCategories: Dispatch<SetStateAction<string[]>>;
 }
 
 export const HoldingsContext = createContext<HoldingsContextData>(
@@ -31,6 +34,11 @@ export const HoldingsContext = createContext<HoldingsContextData>(
 export const HoldingsProvider: React.FC<HoldingsProviderProps> = ({
   children
 }) => {
+  const [selectedCategories, setSelectedCategories] = useLocalStorage<string[]>(
+    'holdings_selected_category',
+    []
+  );
+
   const { portfolio } = usePortfolio();
 
   const {
@@ -39,7 +47,7 @@ export const HoldingsProvider: React.FC<HoldingsProviderProps> = ({
     refetch
   } = trpc.holdings.getHoldings.useQuery({
     portfolio_id: portfolio,
-    category_id: 'all'
+    categories: Array.from(selectedCategories)
   });
 
   const { data: categories, isLoading: isLoadingCategories } =
@@ -66,7 +74,9 @@ export const HoldingsProvider: React.FC<HoldingsProviderProps> = ({
         holdings,
         isLoadingCategories,
         isLoadingHoldings,
-        setHoldingsCategory
+        selectedCategories,
+        setHoldingsCategory,
+        setSelectedCategories
       }}
     >
       {children}

@@ -113,7 +113,10 @@ export const HoldingsDataTableColumns: ColumnDef<HoldingEntity>[] = [
   {
     header: 'Gain',
     meta: { align: 'center' },
-    accessorFn: data => ({ ...data.total_gain, currency: data.currency.code }),
+    accessorFn: data => ({
+      ...data.total_gain,
+      currency: data.currency?.code ?? ''
+    }),
     cell: info => {
       const gain = info.getValue<HoldingGain>();
       return (
@@ -166,7 +169,7 @@ export const HoldingsDataTableColumns: ColumnDef<HoldingEntity>[] = [
     sortingFn: (rowA, rowB) => {
       const gainA = rowA.original.total_gain.percentage;
       const gainB = rowB.original.total_gain.percentage;
-      console.info('a : b', gainA, ':', gainB);
+
       return gainA > gainB ? 1 : gainA < gainB ? -1 : 0;
     }
   },
@@ -175,6 +178,12 @@ export const HoldingsDataTableColumns: ColumnDef<HoldingEntity>[] = [
     meta: { align: 'center' },
     accessorKey: 'weight',
     accessorFn: data => `${formatNumber(data.weight * 100)}%`,
+    sortingFn: (rowA, rowB) => {
+      const weightA = rowA.original.weight;
+      const weightB = rowB.original.weight;
+
+      return weightA > weightB ? 1 : weightA < weightB ? -1 : 0;
+    },
     footer: ({ table }) => (
       <div className="py-2">
         <div>
