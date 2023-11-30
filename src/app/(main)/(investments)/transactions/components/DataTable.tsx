@@ -76,7 +76,7 @@ export const DataTable = <TData, TValue>({
 
   return (
     <div className="max-h-[calc(100vh-260px)] overflow-y-auto overflow-x-hidden rounded-md border">
-      <Table className="table-fixed border-separate border-spacing-x-0 border-spacing-y-0">
+      <Table className="border-separate border-spacing-x-0 border-spacing-y-0">
         <TableHeader className="sticky top-0 m-0 bg-background">
           {table.getHeaderGroups().map(headerGroup => (
             <TableRow key={headerGroup.id}>

@@ -1,10 +1,14 @@
 'use client';
 
-import { zodResolver } from '@hookform/resolvers/zod';
+import { forwardRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 
-import { Button } from '@/components/ui/button';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { PlusCircle } from '@phosphor-icons/react';
+import { ReloadIcon } from '@radix-ui/react-icons';
+
+import { Button, ButtonProps, buttonVariants } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
 
 import {
@@ -16,17 +20,40 @@ import {
   SheetTrigger
 } from '@/components/ui/sheet';
 
-import { AssetSelector } from '@/app/(main)/(investments)/transactions/components/AssetSelector';
-import { TransactionTypeSelector } from '@/app/(main)/(investments)/transactions/components/TransactionTypeSelector';
 import { CurrencySelector } from '@/components/CurrencySelector';
 import { DatePicker } from '@/components/DatePicker';
 import { NumberInput } from '@/components/NumberInput';
 import { toast } from '@/components/ui/use-toast';
 import { usePortfolio } from '@/hooks/usePortfolio';
 import { useTransactions } from '@/hooks/useTransactions';
-import { Plus } from '@phosphor-icons/react';
-import { ReloadIcon } from '@radix-ui/react-icons';
-import { useState } from 'react';
+
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils/functions';
+import { AssetSelector } from '../components/AssetSelector';
+import { TransactionTypeSelector } from '../components/TransactionTypeSelector';
+
+const AddButton = forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant, size, ...props }, ref) => (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          className={cn(buttonVariants({ variant, size, className }))}
+          ref={ref}
+          {...props}
+        />
+      </TooltipTrigger>
+      <TooltipContent className="mb-2">
+        <p>Add</p>
+      </TooltipContent>
+    </Tooltip>
+  )
+);
+
+AddButton.displayName = 'AddButton';
 
 export const AddTransactionFormSchema = z.object({
   asset: z.object(
@@ -96,12 +123,9 @@ export const AddTransaction: React.FC = () => {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button
-          variant="default"
-          className="fixed bottom-4 right-4 m-0 h-12 w-12 rounded-full p-0"
-        >
-          <Plus size="24" />
-        </Button>
+        <AddButton variant="ghost" size="icon" className="rounded-full">
+          <PlusCircle size="24" />
+        </AddButton>
       </SheetTrigger>
       <SheetContent>
         <SheetHeader>
