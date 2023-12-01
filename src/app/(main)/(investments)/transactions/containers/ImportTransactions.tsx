@@ -1,4 +1,4 @@
-import { forwardRef, useState } from 'react';
+import { forwardRef, useEffect, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 
 import { CircleNotch, FileCsv, ListPlus } from '@phosphor-icons/react';
@@ -19,7 +19,9 @@ import {
   TooltipTrigger
 } from '@/components/ui/tooltip';
 
+import { usePortfolio } from '@/hooks/usePortfolio';
 import { cn } from '@/lib/utils/functions';
+import { PutBlobResult } from '@vercel/blob';
 
 type FileValidationStatus = 'in_progress' | 'error' | 'success';
 
@@ -43,6 +45,10 @@ const ImportButton = forwardRef<HTMLButtonElement, ButtonProps>(
 ImportButton.displayName = 'ImportButton';
 
 export const ImportTransactions: React.FC = () => {
+  const { portfolio } = usePortfolio();
+
+  const [blob, setBlob] = useState<PutBlobResult | null>(null);
+
   const [validationStatus, setValidationStatus] =
     useState<FileValidationStatus>('in_progress');
 
@@ -60,6 +66,31 @@ export const ImportTransactions: React.FC = () => {
       'text/csv': ['.csv']
     }
   });
+
+  useEffect(() => {
+    const uploadFile = async (file: File) => {
+      const filename = `${portfolio}-${Date.now()}.csv`;
+      const response = await fetch(`/api/files/upload?filename=${filename}`, {
+        method: 'POST',
+        body: file
+      });
+
+      const newBlob = (await response.json()) as PutBlobResult;
+
+      setBlob(newBlob);
+    };
+
+    if (acceptedFiles.length) {
+      console.info('accepted files', acceptedFiles);
+      uploadFile(acceptedFiles[0]);
+    }
+  }, [acceptedFiles, portfolio]);
+
+  useEffect(() => {
+    if (blob !== null) {
+      console.info(blob.url);
+    }
+  }, [blob]);
 
   return (
     <Dialog>
