@@ -81,7 +81,6 @@ export const ImportTransactions: React.FC = () => {
     };
 
     if (acceptedFiles.length) {
-      console.info('accepted files', acceptedFiles);
       uploadFile(acceptedFiles[0]);
     }
   }, [acceptedFiles, portfolio]);
