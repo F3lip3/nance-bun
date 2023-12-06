@@ -7,7 +7,8 @@ export default authMiddleware({
   ignoredRoutes: [
     '/api/jobs/holdings/compute',
     '/api/jobs/assets/prices/update'
-  ]
+  ],
+  debug: true
 });
 
 export const config = {
