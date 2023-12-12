@@ -1,19 +1,36 @@
-import { put } from '@vercel/blob';
+import { HandleUploadBody, handleUpload } from '@vercel/blob/client';
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request): Promise<NextResponse> {
-  const { searchParams } = new URL(request.url);
-  const filename = searchParams.get('filename') || '';
+  const body = (await request.json()) as HandleUploadBody;
 
-  if (filename && request.body) {
-    const blob = await put(filename, request.body, {
-      access: 'public'
+  try {
+    const jsonResponse = await handleUpload({
+      body,
+      request,
+      onBeforeGenerateToken: async (
+        pathname: string,
+        clientPayload?: string
+      ) => {
+        return {
+          allowedContentTypes: ['text/csv'],
+          tokenPayload: JSON.stringify({
+            clientPayload
+          })
+        };
+      },
+      onUploadCompleted: async ({ blob, tokenPayload }) => {
+        console.log('blob upload completed', blob, tokenPayload);
+      }
     });
 
-    return NextResponse.json(blob);
+    return NextResponse.json(jsonResponse);
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error: (error as Error).message
+      },
+      { status: 400 }
+    );
   }
-
-  return NextResponse.json({
-    message: 'No files detected'
-  });
 }

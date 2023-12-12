@@ -2,6 +2,7 @@ import { forwardRef, useEffect, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 
 import { CircleNotch, FileCsv, ListPlus } from '@phosphor-icons/react';
+import { parse } from 'papaparse';
 
 import { ButtonProps, buttonVariants } from '@/components/ui/button';
 import {
@@ -21,9 +22,21 @@ import {
 
 import { usePortfolio } from '@/hooks/usePortfolio';
 import { cn } from '@/lib/utils/functions';
-import { PutBlobResult } from '@vercel/blob';
+import { z } from 'zod';
+
+const transactionsCsvSchema = z.array(
+  z.tuple([
+    z.coerce.date(),
+    z.enum(['BUY', 'SELL']),
+    z.string(),
+    z.coerce.number(),
+    z.coerce.number(),
+    z.string()
+  ])
+);
 
 type FileValidationStatus = 'in_progress' | 'error' | 'success';
+type TransactionsCsv = z.infer<typeof transactionsCsvSchema>;
 
 const ImportButton = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, ...props }, ref) => (
@@ -47,7 +60,7 @@ ImportButton.displayName = 'ImportButton';
 export const ImportTransactions: React.FC = () => {
   const { portfolio } = usePortfolio();
 
-  const [blob, setBlob] = useState<PutBlobResult | null>(null);
+  const [importData, setImportData] = useState<TransactionsCsv>();
 
   const [validationStatus, setValidationStatus] =
     useState<FileValidationStatus>('in_progress');
@@ -67,29 +80,27 @@ export const ImportTransactions: React.FC = () => {
     }
   });
 
+  const parseCsv = (csv: File | string) => {
+    parse(csv, {
+      delimiter: ';',
+      complete: function (results) {
+        const rawCsv = results.data?.filter(x => (x as unknown[]).length === 6);
+        const parseResult = transactionsCsvSchema.safeParse(rawCsv);
+        if (parseResult.success) {
+          setImportData(parseResult.data);
+        } else {
+          console.info(results.data);
+          console.error(parseResult.error);
+        }
+      }
+    });
+  };
+
   useEffect(() => {
-    const uploadFile = async (file: File) => {
-      const filename = `${portfolio}-${Date.now()}.csv`;
-      const response = await fetch(`/api/files/upload?filename=${filename}`, {
-        method: 'POST',
-        body: file
-      });
-
-      const newBlob = (await response.json()) as PutBlobResult;
-
-      setBlob(newBlob);
-    };
-
     if (acceptedFiles.length) {
-      uploadFile(acceptedFiles[0]);
+      parseCsv(acceptedFiles[0]);
     }
   }, [acceptedFiles, portfolio]);
-
-  useEffect(() => {
-    if (blob !== null) {
-      console.info(blob.url);
-    }
-  }, [blob]);
 
   return (
     <Dialog>
@@ -128,8 +139,8 @@ export const ImportTransactions: React.FC = () => {
           >
             <input {...getInputProps()} />
             <p className="cursor-pointer">
-              Paste the content, or drag&apos;n&apos;drop, or click to select
-              the CSV file.
+              Paste the content or import a CSV file clicking here or dropping
+              the file.
             </p>
           </div>
           {acceptedFiles?.length > 0 && (
