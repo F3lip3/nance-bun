@@ -2,7 +2,6 @@
 
 import { forwardRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import * as z from 'zod';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { PlusCircle } from '@phosphor-icons/react';
@@ -33,6 +32,12 @@ import {
   TooltipTrigger
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils/functions';
+
+import {
+  AddTransactionForm,
+  AddTransactionFormSchema
+} from '@/schemas/transaction';
+
 import { AssetSelector } from '../components/AssetSelector';
 import { TransactionTypeSelector } from '../components/TransactionTypeSelector';
 
@@ -54,35 +59,6 @@ const AddButton = forwardRef<HTMLButtonElement, ButtonProps>(
 );
 
 AddButton.displayName = 'AddButton';
-
-export const AddTransactionFormSchema = z.object({
-  asset: z.object(
-    {
-      code: z.string(),
-      exchange: z.string(),
-      shortname: z.string(),
-      sector: z.string().optional(),
-      industry: z.string().optional(),
-      type: z.string().optional(),
-      longname: z.string(),
-      source: z.string()
-    },
-    { required_error: 'Set an asset' }
-  ),
-  cost_per_share: z
-    .string({ required_error: 'Inform the cost per share' })
-    .transform(value => Number(value)),
-  currency_id: z.string({ required_error: 'Set the transaction currency' }),
-  date: z.date({
-    required_error: 'Pick a date'
-  }),
-  shares: z
-    .string({ required_error: 'Input the amount of shares' })
-    .transform(value => Number(value)),
-  type: z.enum(['BUY', 'SELL'])
-});
-
-export type AddTransactionForm = z.infer<typeof AddTransactionFormSchema>;
 
 export const AddTransaction: React.FC = () => {
   const [open, setOpen] = useState(false);

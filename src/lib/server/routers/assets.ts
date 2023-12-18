@@ -1,8 +1,11 @@
 import z from 'zod';
 
-import { YahooFinanceProvider } from '@/lib/server/container/providers/FinanceProvider/implementations/YahooFinance/YahooFinanceProvider';
 import { Prisma } from '@prisma/client';
+
+import { YahooFinanceProvider } from '../../server/container/providers/FinanceProvider/implementations/YahooFinance/YahooFinanceProvider';
 import { protectedProcedure, publicProcedure, router } from '../trpc';
+
+import '../../utils/array.extensions';
 
 export const AssetSchema = z.object({
   code: z.string(),
@@ -34,17 +37,67 @@ export type AssetEntity = z.infer<typeof AssetSchema>;
 
 export const assetsRouter = router({
   findAssets: protectedProcedure
-    .input(z.object({ code: z.string().optional() }))
+    .input(z.string())
     .output(z.array(AssetSchema))
-    .query(async ({ input: { code } }) => {
-      if (!code) return [];
+    .query(async ({ ctx, input }) => {
+      if (!input) return [];
 
       const provider = new YahooFinanceProvider();
-      const tickers = await provider.searchTickers(code);
 
-      if (!tickers.length) return [];
+      const assetCodes = Array.from(new Set(input.split(',')));
+      const dbTickers = await Promise.all(
+        assetCodes.map(assetCode =>
+          ctx.db.asset.findFirst({
+            where: {
+              code: {
+                startsWith: assetCode
+              },
+              status: 'ACTIVE'
+            }
+          })
+        )
+      );
 
-      return tickers.map(ticker => AssetSchema.parse(ticker));
+      const existingTickers = dbTickers
+        .filter(ticker => ticker !== null)
+        .map(ticker => AssetSchema.parse(ticker));
+
+      console.info('ASSET CODES', assetCodes);
+      console.info('EXISTING', existingTickers);
+
+      const assetCodesToFetch = existingTickers.length
+        ? assetCodes.filter(
+            assetCode =>
+              !existingTickers.some(ticker => ticker.code.startsWith(assetCode))
+          )
+        : assetCodes;
+
+      if (assetCodesToFetch.length === 0) {
+        return existingTickers;
+      }
+
+      if (assetCodesToFetch.length <= 5) {
+        const tickers = await provider.searchTickers(
+          assetCodesToFetch.join(',')
+        );
+
+        if (!tickers.length) return existingTickers;
+
+        return tickers
+          .map(ticker => AssetSchema.parse(ticker))
+          .concat(existingTickers);
+      }
+
+      const chunks = assetCodesToFetch.chunk(5);
+      const tickersList = await Promise.all(
+        chunks.map(chunk => provider.searchTickers(chunk.join(',')))
+      );
+
+      const tickers = tickersList
+        .reduce((acc, curr) => [...acc, ...curr], [])
+        .map(ticker => AssetSchema.parse(ticker));
+
+      return tickers.concat(existingTickers);
     }),
   getAllAssets: publicProcedure.output(AssetsSchema).query(async ({ ctx }) => {
     const assets = await ctx.db.asset.findMany({

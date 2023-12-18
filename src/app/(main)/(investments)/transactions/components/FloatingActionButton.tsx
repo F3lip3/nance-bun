@@ -3,7 +3,7 @@ import { Plus } from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
 
 import { AddTransaction } from '../containers/AddTransaction';
-import { ImportTransactions } from '../containers/ImportTransactions';
+import { ImportTransactions } from '../containers/import/ImportTransactions';
 
 export const FloatingActionButton: React.FC = () => {
   return (

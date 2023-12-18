@@ -19,9 +19,9 @@ export class YahooFinanceProvider implements IFinanceProvider {
     throw new Error('Method not implemented.');
   }
 
-  public async searchTickers(ticker: string): Promise<TickerEntity[]> {
+  public async searchTickers(tickers: string): Promise<TickerEntity[]> {
     const response = await fetch(
-      `${API_URL}/v1/finance/search?q=${ticker}&newCount=0&navCount=0`
+      `${API_URL}/v1/finance/search?q=${tickers}&newCount=0&navCount=0`
     );
 
     const json = await response.json();

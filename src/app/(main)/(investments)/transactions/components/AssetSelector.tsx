@@ -44,7 +44,7 @@ export const AssetSelector = <T extends FieldValues>({
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
 
-  const { data: assets } = trpc.assets.findAssets.useQuery({ code: search });
+  const { data: assets } = trpc.assets.findAssets.useQuery(search);
 
   useEffect(() => {
     setOpen(focus);

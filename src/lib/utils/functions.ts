@@ -46,3 +46,7 @@ export function formatNumber(
 
   return numberFormatter.format(value);
 }
+
+export function sleep(time: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, time));
+}
