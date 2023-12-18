@@ -1,8 +1,8 @@
 'use client';
 
-import { FloatingActionButton } from '@/app/(main)/(investments)/transactions/components/FloatingActionButton';
-import { ListTransactions } from '@/app/(main)/(investments)/transactions/containers/ListTransactions';
-import { TransactionsProvider } from '@/contexts/TransactionsContext';
+import { FloatingActionButton } from '@/components/transactions/floating-action-button';
+import { ListTransactions } from '@/containers/transactions/list-transactions';
+import { TransactionsProvider } from '@/contexts/transactions.context';
 
 export default function Transactions() {
   return (

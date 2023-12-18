@@ -1,6 +1,6 @@
-import { Header } from '@/containers/Header';
-import { Menu } from '@/containers/Menu';
-import { PortfolioProvider } from '@/contexts/PortfolioContext';
+import { Header } from '@/containers/common/header';
+import { Menu } from '@/containers/common/menu';
+import { PortfolioProvider } from '@/contexts/portfolio.context';
 
 type MainLayoutProps = {
   children: React.ReactNode;

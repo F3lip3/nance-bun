@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { verifySignatureEdge } from '@upstash/qstash/dist/nextjs';
 
-import { RapidAPIYahooFinanceProvider } from '@/lib/server/container/providers/FinanceProvider/implementations/RapidAPIYahooFinance/RapidAPIYahooFinanceProvider';
+import { RapidAPIYahooFinanceProvider } from '@/lib/server/container/providers/finance/implementations/rapid-api-yahoo-finance/rapid-api-yahoo-finance.provider';
 import { api } from '@/lib/trpc/api';
 
 const handler = async () => {

@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 
-import { ThemeProvider } from '@/components/ThemeProvider';
+import { ThemeProvider } from '@/components/common/theme-provider';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import TrpcProvider from '@/lib/trpc/Provider';
+import { TrpcProvider } from '@/lib/trpc/provider';
 import { cn } from '@/lib/utils/functions';
 import { ClerkProvider } from '@clerk/nextjs';
 

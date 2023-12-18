@@ -1,6 +1,6 @@
 import z from 'zod';
 
-import { QStashQueueProvider } from '@/lib/server/container/providers/ServerlessQueueProvider/implementations/QStashQueueProvider';
+import { QStashQueueProvider } from '@/lib/server/container/providers/queue/implementations/qstash-queue.provider';
 import { ComputeHoldingInput } from '@/lib/server/routers/holdings';
 import { protectedProcedure, router } from '@/lib/server/trpc';
 import { Prisma } from '@prisma/client';

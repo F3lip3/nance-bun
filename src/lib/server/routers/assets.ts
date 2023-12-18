@@ -2,8 +2,9 @@ import z from 'zod';
 
 import { Prisma } from '@prisma/client';
 
-import { YahooFinanceProvider } from '../../server/container/providers/FinanceProvider/implementations/YahooFinance/YahooFinanceProvider';
 import { protectedProcedure, publicProcedure, router } from '../trpc';
+
+import { YahooFinanceProvider } from '@/lib/server/container/providers/finance/implementations/yahoo-finance/yahoo-finance.provider';
 
 import '../../utils/array.extensions';
 

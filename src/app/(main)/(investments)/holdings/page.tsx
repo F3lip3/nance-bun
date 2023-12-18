@@ -1,8 +1,7 @@
 'use client';
 
-import { HoldingsProvider } from '@/contexts/HoldingsContext';
-
-import { HoldingsDataTable } from './components/DataTable/DataTable';
+import { HoldingsDataTable } from '@/components/holdings/DataTable/DataTable';
+import { HoldingsProvider } from '@/contexts/holdings.context';
 
 export default function Assets() {
   return (
