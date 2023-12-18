@@ -1,21 +1,18 @@
 import {
+  DialogDescription,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog';
+import { useImportTransactions } from '@/containers/transactions/import';
+import { cn } from '@/lib/utils/functions';
+import {
   CheckCircle,
   CircleNotch,
   FileCsv,
   XCircle
 } from '@phosphor-icons/react';
 
-import {
-  DialogDescription,
-  DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog';
-
-import { cn } from '@/lib/utils/functions';
-
-import { useImportTransactions } from '@/hooks/use-import-transactions';
-
-export const ImportTransactionsDialogStep1: React.FC = () => {
+export const Validate = () => {
   const { dropzoneState, validationStatus } = useImportTransactions();
 
   return (
