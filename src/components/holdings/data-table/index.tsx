@@ -30,8 +30,9 @@ import { ArrowDown, ArrowUp } from '@phosphor-icons/react';
 
 import { Skeleton } from '@/components/ui/skeleton';
 import { HoldingEntity } from '@/lib/server/routers/holdings';
-import { HoldingsDataTableColumns } from './DataTableColumns';
-import { DataTableToolbar } from './DataTableToolbar';
+
+import { HoldingsDataTableColumns } from './columns';
+import { DataTableToolbar } from './toolbar';
 
 interface SortContainerProps<TData, TValue> {
   children: React.ReactNode;

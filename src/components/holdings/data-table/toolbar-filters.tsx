@@ -4,7 +4,7 @@ import { Table } from '@tanstack/react-table';
 import { Input } from '@/components/ui/input';
 import { useHoldings } from '@/hooks/use-holdings';
 
-import { DataTableToolbarFiltersCategory } from './DataTableToolbarFiltersCategory';
+import { DataTableToolbarFiltersCategory } from './toolbar-filters-category';
 
 interface DataTableToolbarFiltersProps<TData> {
   table: Table<TData>;

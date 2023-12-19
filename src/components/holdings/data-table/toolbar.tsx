@@ -2,8 +2,8 @@
 
 import { Table } from '@tanstack/react-table';
 
-import { DataTableSetCategory } from './DataTableSetCategory';
-import { DataTableToolbarFilters } from './DataTableToolbarFilters';
+import { DataTableSetCategory } from './set-category';
+import { DataTableToolbarFilters } from './toolbar-filters';
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>;
