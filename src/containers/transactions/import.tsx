@@ -10,17 +10,24 @@ import { DropzoneState, useDropzone } from 'react-dropzone';
 import { parse } from 'papaparse';
 
 import { ImportButton } from '@/components/transactions/import-button';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogTrigger
+} from '@/components/ui/dialog';
 import { toast } from '@/components/ui/use-toast';
 import { Validate } from '@/containers/transactions/import-validate';
 import { usePortfolio } from '@/hooks/use-portfolio';
+import { AssetEntity } from '@/lib/server/routers/assets';
 import { trpc } from '@/lib/trpc/client';
 import { sleep } from '@/lib/utils/functions';
 import { ImportTransactionsSchema, Transaction } from '@/schemas/transaction';
 import { ListPlus } from '@phosphor-icons/react';
 
 type ValidationStatus = 'error' | 'in_progress' | 'success';
-type ValidationType = 'assets' | 'structure';
+type ValidationType = 'assets' | 'structure' | 'transactions';
 
 interface ImportTransactionsContext {
   dropzoneState: DropzoneState;
@@ -40,7 +47,7 @@ export const ImportTransactions = () => {
     Map<ValidationType, ValidationStatus>
   >(new Map());
 
-  const { data: assets } = trpc.assets.findAssets.useQuery(
+  const { data: assetsList } = trpc.assets.findAssets.useQuery(
     assetsCodes.join(',')
   );
 
@@ -58,6 +65,17 @@ export const ImportTransactions = () => {
   const fetchAssets = useCallback((transactions: Transaction[]) => {
     setValidation('assets', 'in_progress');
     setAssetsCodes(transactions.map(trans => trans.asset_code));
+  }, []);
+
+  const fillTransactionsAssets = useCallback((assets: AssetEntity[]) => {
+    setValidation('transactions', 'in_progress');
+    console.info('HERE');
+    setTransactions(trans =>
+      trans.map(tran => ({
+        ...tran,
+        asset: assets?.find(asset => asset.code.startsWith(tran.asset_code))
+      }))
+    );
   }, []);
 
   const parseCsv = useCallback(
@@ -83,6 +101,13 @@ export const ImportTransactions = () => {
     [fetchAssets]
   );
 
+  const valid = validationStatus.get('transactions') === 'success';
+
+  const validateTransactions = useCallback(() => {
+    setValidation('transactions', 'success');
+    console.info(transactions);
+  }, [transactions]);
+
   useEffect(() => {
     const start = async () => {
       setValidation('structure', 'in_progress');
@@ -96,15 +121,32 @@ export const ImportTransactions = () => {
   }, [dropzoneState.acceptedFiles, parseCsv, portfolio]);
 
   useEffect(() => {
-    if (assetsCodes.length && assets !== undefined) {
-      if (assets.length === 0) {
+    if (
+      assetsCodes.length &&
+      assetsList !== undefined &&
+      validationStatus.get('assets') === 'in_progress'
+    ) {
+      if (assetsList.length !== 0) {
         setValidation('assets', 'success');
+        fillTransactionsAssets(assetsList);
       } else {
         setValidation('assets', 'error');
         toast({ title: 'No assets found!', variant: 'destructive' });
       }
     }
-  }, [assets, assetsCodes]);
+  }, [
+    assetsList,
+    assetsCodes,
+    fillTransactionsAssets,
+    validationStatus,
+    validateTransactions
+  ]);
+
+  useEffect(() => {
+    if (validationStatus.get('transactions') === 'in_progress') {
+      validateTransactions();
+    }
+  }, [validateTransactions, validationStatus]);
 
   return (
     <ImportTransactionsContext.Provider
@@ -118,6 +160,13 @@ export const ImportTransactions = () => {
         </DialogTrigger>
         <DialogContent className="min-w-[40rem]">
           <Validate />
+          {valid && (
+            <DialogFooter>
+              <Button type="button" variant="secondary">
+                Proceed
+              </Button>
+            </DialogFooter>
+          )}
         </DialogContent>
       </Dialog>
     </ImportTransactionsContext.Provider>

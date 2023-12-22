@@ -68,6 +68,7 @@ export const Validate = () => {
                     <span className="text-muted-foreground">
                       {type === 'assets' && 'validating assets'}
                       {type === 'structure' && 'validating csv structure'}
+                      {type === 'transactions' && 'validating transactions'}
                     </span>
                     {validationStatus.get(type) === 'in_progress' && (
                       <CircleNotch
