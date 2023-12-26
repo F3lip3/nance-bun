@@ -63,9 +63,6 @@ export const assetsRouter = router({
         .filter(ticker => ticker !== null)
         .map(ticker => AssetSchema.parse(ticker));
 
-      console.info('ASSET CODES', assetCodes);
-      console.info('EXISTING', existingTickers);
-
       const assetCodesToFetch = existingTickers.length
         ? assetCodes.filter(
             assetCode =>

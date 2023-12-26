@@ -1,8 +1,5 @@
-import {
-  DialogDescription,
-  DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { DialogFooter } from '@/components/ui/dialog';
 import { useImportTransactions } from '@/containers/transactions/import';
 import { cn } from '@/lib/utils/functions';
 import {
@@ -13,26 +10,11 @@ import {
 } from '@phosphor-icons/react';
 
 export const Validate = () => {
-  const { dropzoneState, validationStatus } = useImportTransactions();
+  const { dropzoneState, setStep, valid, validationStatus } =
+    useImportTransactions();
 
   return (
     <>
-      <DialogHeader>
-        <DialogTitle>Import transactions</DialogTitle>
-        <DialogDescription asChild>
-          <div>
-            The content must have the following columns:
-            <ul className="list-inside list-disc pl-2 pt-2">
-              <li>Transaction date</li>
-              <li>Transaction type</li>
-              <li>Asset code</li>
-              <li>Shares</li>
-              <li>Cost per share</li>
-              <li>Currency</li>
-            </ul>
-          </div>
-        </DialogDescription>
-      </DialogHeader>
       <div className="flex flex-col items-center justify-start gap-4">
         <div
           {...dropzoneState.getRootProps({
@@ -67,6 +49,7 @@ export const Validate = () => {
                   <li key={type} className="flex flex-row items-center gap-2">
                     <span className="text-muted-foreground">
                       {type === 'assets' && 'validating assets'}
+                      {type === 'currencies' && 'validating currencies'}
                       {type === 'structure' && 'validating csv structure'}
                       {type === 'transactions' && 'validating transactions'}
                     </span>
@@ -89,6 +72,17 @@ export const Validate = () => {
           </div>
         )}
       </div>
+      {valid && (
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => setStep('review')}
+          >
+            Proceed
+          </Button>
+        </DialogFooter>
+      )}
     </>
   );
 };

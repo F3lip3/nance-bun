@@ -1,4 +1,6 @@
 import {
+  Dispatch,
+  SetStateAction,
   createContext,
   useCallback,
   useContext,
@@ -10,14 +12,16 @@ import { DropzoneState, useDropzone } from 'react-dropzone';
 import { parse } from 'papaparse';
 
 import { ImportButton } from '@/components/transactions/import-button';
-import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
   DialogTrigger
 } from '@/components/ui/dialog';
 import { toast } from '@/components/ui/use-toast';
+import { Review } from '@/containers/transactions/import-review';
 import { Validate } from '@/containers/transactions/import-validate';
 import { usePortfolio } from '@/hooks/use-portfolio';
 import { AssetEntity } from '@/lib/server/routers/assets';
@@ -26,11 +30,17 @@ import { sleep } from '@/lib/utils/functions';
 import { ImportTransactionsSchema, Transaction } from '@/schemas/transaction';
 import { ListPlus } from '@phosphor-icons/react';
 
+type Step = 'validation' | 'review' | 'import';
 type ValidationStatus = 'error' | 'in_progress' | 'success';
-type ValidationType = 'assets' | 'structure' | 'transactions';
+type ValidationType = 'assets' | 'currencies' | 'structure' | 'transactions';
 
 interface ImportTransactionsContext {
   dropzoneState: DropzoneState;
+  importTransactions: (transactionsToImport: Transaction[]) => void;
+  resetImport: () => void;
+  setStep: Dispatch<SetStateAction<Step>>;
+  transactions: Transaction[];
+  valid: boolean;
   validationStatus: Map<ValidationType, ValidationStatus>;
 }
 
@@ -42,14 +52,19 @@ export const ImportTransactions = () => {
   const { portfolio } = usePortfolio();
 
   const [assetsCodes, setAssetsCodes] = useState<string[]>([]);
+  const [step, setStep] = useState<Step>('validation');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [validationStatus, setValidationStatus] = useState<
     Map<ValidationType, ValidationStatus>
   >(new Map());
 
+  const valid = validationStatus.get('currencies') === 'success';
+
   const { data: assetsList } = trpc.assets.findAssets.useQuery(
     assetsCodes.join(',')
   );
+
+  const { data: currencies } = trpc.currencies.getCurrencies.useQuery();
 
   const dropzoneState = useDropzone({
     multiple: false,
@@ -69,14 +84,23 @@ export const ImportTransactions = () => {
 
   const fillTransactionsAssets = useCallback((assets: AssetEntity[]) => {
     setValidation('transactions', 'in_progress');
-    console.info('HERE');
     setTransactions(trans =>
-      trans.map(tran => ({
-        ...tran,
-        asset: assets?.find(asset => asset.code.startsWith(tran.asset_code))
-      }))
+      trans.map(tran => {
+        const asset = assets?.find(asset =>
+          asset.code.startsWith(tran.asset_code)
+        );
+        return {
+          ...tran,
+          asset,
+          error: asset ? '' : 'Asset not found'
+        };
+      })
     );
   }, []);
+
+  const importTransactions = (transactionsToImport: Transaction[]) => {
+    console.info('IMPORT TRANSACTIONS:', transactionsToImport);
+  };
 
   const parseCsv = useCallback(
     (csv: File | string) => {
@@ -101,12 +125,28 @@ export const ImportTransactions = () => {
     [fetchAssets]
   );
 
-  const valid = validationStatus.get('transactions') === 'success';
+  const resetImport = () => {
+    setAssetsCodes([]);
+    setStep('validation');
+    setTransactions([]);
+    setValidationStatus(new Map());
+  };
 
-  const validateTransactions = useCallback(() => {
-    setValidation('transactions', 'success');
-    console.info(transactions);
-  }, [transactions]);
+  const validateCurrencies = useCallback(async () => {
+    setValidation('currencies', 'in_progress');
+    setTransactions(currentTransactions =>
+      currentTransactions.map(trn => ({
+        ...trn,
+        error: trn.error
+          ? trn.error
+          : currencies?.some(cr => cr.code === trn.currency)
+            ? ''
+            : 'Currency not found'
+      }))
+    );
+    await sleep(3000);
+    setValidation('currencies', 'success');
+  }, [currencies]);
 
   useEffect(() => {
     const start = async () => {
@@ -134,23 +174,29 @@ export const ImportTransactions = () => {
         toast({ title: 'No assets found!', variant: 'destructive' });
       }
     }
-  }, [
-    assetsList,
-    assetsCodes,
-    fillTransactionsAssets,
-    validationStatus,
-    validateTransactions
-  ]);
+  }, [assetsList, assetsCodes, fillTransactionsAssets, validationStatus]);
 
   useEffect(() => {
-    if (validationStatus.get('transactions') === 'in_progress') {
-      validateTransactions();
-    }
-  }, [validateTransactions, validationStatus]);
+    const exec = async () => {
+      await sleep(3000);
+      setValidation('transactions', 'success');
+      await validateCurrencies();
+    };
+
+    if (validationStatus.get('transactions') === 'in_progress') exec();
+  }, [validateCurrencies, validationStatus]);
 
   return (
     <ImportTransactionsContext.Provider
-      value={{ dropzoneState, validationStatus }}
+      value={{
+        dropzoneState,
+        importTransactions,
+        resetImport,
+        setStep,
+        transactions,
+        valid,
+        validationStatus
+      }}
     >
       <Dialog>
         <DialogTrigger asChild>
@@ -158,15 +204,35 @@ export const ImportTransactions = () => {
             <ListPlus size={24} />
           </ImportButton>
         </DialogTrigger>
-        <DialogContent className="min-w-[40rem]">
-          <Validate />
-          {valid && (
-            <DialogFooter>
-              <Button type="button" variant="secondary">
-                Proceed
-              </Button>
-            </DialogFooter>
-          )}
+        <DialogContent className="min-w-[48rem] max-w-5xl">
+          <DialogHeader>
+            <DialogTitle>Import Transactions</DialogTitle>
+            <DialogDescription asChild>
+              <>
+                {step === 'validation' && (
+                  <div>
+                    The content must have the following columns:
+                    <ul className="list-inside list-disc pl-2 pt-2">
+                      <li>Transaction date</li>
+                      <li>Transaction type</li>
+                      <li>Asset code</li>
+                      <li>Shares</li>
+                      <li>Cost per share</li>
+                      <li>Currency</li>
+                    </ul>
+                  </div>
+                )}
+                {step === 'review' && (
+                  <small className="text-muted-foreground">
+                    Check for inconsistences and select which transactions you
+                    would like to import
+                  </small>
+                )}
+              </>
+            </DialogDescription>
+          </DialogHeader>
+          {step === 'validation' && <Validate />}
+          {step === 'review' && <Review />}
         </DialogContent>
       </Dialog>
     </ImportTransactionsContext.Provider>

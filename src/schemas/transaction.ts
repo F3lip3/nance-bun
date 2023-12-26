@@ -24,7 +24,8 @@ export const TransactionSchema = z.object({
   asset: AssetSchema.optional(),
   shares: z.number(),
   cost_per_share: z.number(),
-  currency: z.string()
+  currency: z.string(),
+  error: z.string().optional()
 });
 
 export const ImportTransactionSchema = z

@@ -19,6 +19,11 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+export function formatDate(value: Date) {
+  const currentLocale = locale();
+  return new Intl.DateTimeFormat(currentLocale).format(value);
+}
+
 export function formatNumber(
   value: number,
   opts: formatNumberOpts = {
@@ -31,12 +36,19 @@ export function formatNumber(
   const { currency, decimalDigits, style } = opts;
 
   if (currency) {
-    const currencyFormatter = new Intl.NumberFormat(currentLocale, {
-      style: 'currency',
-      currency
-    });
+    try {
+      const currencyFormatter = new Intl.NumberFormat(currentLocale, {
+        style: 'currency',
+        currency
+      });
 
-    return currencyFormatter.format(value).replace(/^(\D+)/, '$1 ');
+      return currencyFormatter.format(value).replace(/^(\D+)/, '$1 ');
+    } catch (ex) {
+      if ((ex as Error).message.includes('Invalid currency code')) {
+        return formatNumber(value, { ...opts, currency: 'USD' });
+      }
+      throw ex;
+    }
   }
 
   const numberFormatter = new Intl.NumberFormat(currentLocale, {
