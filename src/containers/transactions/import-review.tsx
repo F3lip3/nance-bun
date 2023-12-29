@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DialogFooter } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Table,
   TableBody,
@@ -16,14 +17,16 @@ import {
 } from '@/components/ui/tooltip';
 import { useImportTransactions } from '@/containers/transactions/import';
 import { cn, formatDate, formatNumber } from '@/lib/utils/functions';
-import { Transaction } from '@/schemas/transaction';
-import { WarningCircle } from '@phosphor-icons/react';
+import { Transaction, TransactionStatus } from '@/schemas/transaction';
+import { CheckCircle, CircleNotch, WarningCircle } from '@phosphor-icons/react';
 import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
   useReactTable
 } from '@tanstack/react-table';
+
+import { ThreeDots } from 'react-loader-spinner';
 
 type TransactionError = {
   error: string;
@@ -33,10 +36,9 @@ type TransactionError = {
 export const columns: ColumnDef<Transaction>[] = [
   {
     id: 'select',
-    accessorKey: 'error',
+    accessorFn: data => ({ error: data.error, status: data.status }),
     enableSorting: false,
     enableHiding: false,
-
     header: ({ table }) => (
       <Checkbox
         checked={
@@ -48,8 +50,9 @@ export const columns: ColumnDef<Transaction>[] = [
       />
     ),
     cell: ({ row, getValue }) => {
-      const error = getValue() as string;
-      if (error) {
+      const data = getValue<{ error: string; status: TransactionStatus }>();
+
+      if (data.status === 'error') {
         return (
           <div className="flex items-center justify-center">
             <Tooltip>
@@ -60,9 +63,31 @@ export const columns: ColumnDef<Transaction>[] = [
                 />
               </TooltipTrigger>
               <TooltipContent side="right" className="bg-red-400 text-red-950">
-                <p>{error}</p>
+                <p>{data.error}</p>
               </TooltipContent>
             </Tooltip>
+          </div>
+        );
+      }
+
+      if (data.status === 'importing') {
+        return (
+          <div className="flex items-center justify-center">
+            <CircleNotch
+              size="22"
+              className="ml-2 animate-spin self-center text-blue-500"
+            />
+          </div>
+        );
+      }
+
+      if (data.status === 'done') {
+        return (
+          <div className="flex items-center justify-center">
+            <CheckCircle
+              size="22"
+              className="ml-2 self-center text-green-500"
+            />
           </div>
         );
       }
@@ -122,7 +147,7 @@ export const columns: ColumnDef<Transaction>[] = [
 ];
 
 export const Review = () => {
-  const { importTransactions, resetImport, transactions } =
+  const { startTransactionsImport, resetImport, setStep, step, transactions } =
     useImportTransactions();
 
   const table = useReactTable({
@@ -131,8 +156,8 @@ export const Review = () => {
     columns
   });
 
-  const handleImport = () => {
-    importTransactions(
+  const handleImport = async () => {
+    await startTransactionsImport(
       table
         .getSelectedRowModel()
         .rows.map(row => row.original as Transaction)
@@ -152,14 +177,14 @@ export const Review = () => {
 
   const numOfErrors = errors.reduce((acc, err) => acc + err.occurrences, 0);
   const numOfRows = table.getFilteredRowModel().rows.length;
-  const numOfSelectedRows =
-    table.getFilteredSelectedRowModel().rows.length > 0
-      ? table.getFilteredSelectedRowModel().rows.length - numOfErrors
-      : 0;
+  const numOfSelectedRows = table.getIsAllRowsSelected()
+    ? numOfRows - numOfErrors
+    : table.getFilteredSelectedRowModel().rows.length;
 
   return (
     <>
-      <div className="max-h-[calc(100vh-588px)] overflow-y-auto overflow-x-hidden border">
+      {/* <div className="max-h-[calc(100vh-588px)] overflow-y-auto overflow-x-hidden border"> */}
+      <ScrollArea className="max-h-[calc(100vh-588px)] border">
         <Table className="border-separate border-spacing-0">
           <TableHeader className="sticky top-0 z-10 m-0 bg-background">
             {table.getHeaderGroups().map(headerGroup => (
@@ -245,18 +270,30 @@ export const Review = () => {
               ))}
           </div>
         </div>
-      </div>
+      </ScrollArea>
       <DialogFooter>
-        <Button type="button" variant="outline" onClick={() => resetImport()}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => resetImport()}
+          disabled={step === 'import'}
+        >
           Get back
         </Button>
         <Button
           type="button"
           variant="secondary"
-          onClick={handleImport}
-          disabled={numOfSelectedRows === 0}
+          onClick={() => handleImport()}
+          disabled={numOfSelectedRows === 0 || step === 'import'}
         >
-          Import selected
+          {step === 'import' ? (
+            <>
+              Importing&nbsp;&nbsp;&nbsp;
+              <ThreeDots height="16" width="16" color="white" />
+            </>
+          ) : (
+            'Import selected'
+          )}
         </Button>
       </DialogFooter>
     </>

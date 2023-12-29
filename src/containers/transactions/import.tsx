@@ -34,11 +34,16 @@ type Step = 'validation' | 'review' | 'import';
 type ValidationStatus = 'error' | 'in_progress' | 'success';
 type ValidationType = 'assets' | 'currencies' | 'structure' | 'transactions';
 
+const IMPORT_LIST_LIMIT = 100;
+
 interface ImportTransactionsContext {
   dropzoneState: DropzoneState;
-  importTransactions: (transactionsToImport: Transaction[]) => void;
   resetImport: () => void;
   setStep: Dispatch<SetStateAction<Step>>;
+  startTransactionsImport: (
+    transactionsToImport: Transaction[]
+  ) => Promise<void>;
+  step: Step;
   transactions: Transaction[];
   valid: boolean;
   validationStatus: Map<ValidationType, ValidationStatus>;
@@ -52,6 +57,7 @@ export const ImportTransactions = () => {
   const { portfolio } = usePortfolio();
 
   const [assetsCodes, setAssetsCodes] = useState<string[]>([]);
+  const [open, setOpen] = useState(false);
   const [step, setStep] = useState<Step>('validation');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [validationStatus, setValidationStatus] = useState<
@@ -89,18 +95,16 @@ export const ImportTransactions = () => {
         const asset = assets?.find(asset =>
           asset.code.startsWith(tran.asset_code)
         );
+        const err = asset ? '' : 'Asset not found';
         return {
           ...tran,
           asset,
-          error: asset ? '' : 'Asset not found'
+          status: err ? 'error' : tran.status,
+          error: err
         };
       })
     );
   }, []);
-
-  const importTransactions = (transactionsToImport: Transaction[]) => {
-    console.info('IMPORT TRANSACTIONS:', transactionsToImport);
-  };
 
   const parseCsv = useCallback(
     (csv: File | string) => {
@@ -112,6 +116,14 @@ export const ImportTransactions = () => {
           );
           const parseResult = ImportTransactionsSchema.safeParse(rawCsv);
           if (parseResult.success) {
+            if (parseResult.data.length > IMPORT_LIST_LIMIT) {
+              setValidation('structure', 'error');
+              toast({
+                title: `The import file must not have more than ${IMPORT_LIST_LIMIT} transactions!`,
+                variant: 'destructive'
+              });
+              return;
+            }
             setValidation('structure', 'success');
             setTransactions(parseResult.data);
             fetchAssets(parseResult.data);
@@ -125,6 +137,27 @@ export const ImportTransactions = () => {
     [fetchAssets]
   );
 
+  const importTransactions = async (transactionsToImport: Transaction[]) => {
+    const firstTransaction = transactionsToImport.shift();
+    if (!firstTransaction) {
+      toast({ title: 'Import finished successfully.' });
+      await sleep(3000);
+      setOpen(false);
+      resetImport();
+      return;
+    }
+
+    setTransactions(currentTransactions =>
+      currentTransactions.map(trn => ({
+        ...trn,
+        status: trn.tmpid === firstTransaction.tmpid ? 'done' : trn.status
+      }))
+    );
+
+    await sleep(1000);
+    await importTransactions(transactionsToImport);
+  };
+
   const resetImport = () => {
     setAssetsCodes([]);
     setStep('validation');
@@ -132,17 +165,38 @@ export const ImportTransactions = () => {
     setValidationStatus(new Map());
   };
 
-  const validateCurrencies = useCallback(async () => {
-    setValidation('currencies', 'in_progress');
+  const startTransactionsImport = async (
+    transactionsToImport: Transaction[]
+  ) => {
+    setStep('import');
     setTransactions(currentTransactions =>
       currentTransactions.map(trn => ({
         ...trn,
-        error: trn.error
-          ? trn.error
-          : currencies?.some(cr => cr.code === trn.currency)
-            ? ''
-            : 'Currency not found'
+        status: transactionsToImport.some(
+          trnToImport => trnToImport.tmpid === trn.tmpid
+        )
+          ? 'importing'
+          : trn.status
       }))
+    );
+
+    await importTransactions(transactionsToImport);
+  };
+
+  const validateCurrencies = useCallback(async () => {
+    setValidation('currencies', 'in_progress');
+    setTransactions(currentTransactions =>
+      currentTransactions.map(trn => {
+        const err = currencies?.some(cr => cr.code === trn.currency)
+          ? ''
+          : 'Currency not found';
+
+        return {
+          ...trn,
+          status: err ? 'error' : trn.status,
+          error: trn.error ? trn.error : err
+        };
+      })
     );
     await sleep(3000);
     setValidation('currencies', 'success');
@@ -190,15 +244,16 @@ export const ImportTransactions = () => {
     <ImportTransactionsContext.Provider
       value={{
         dropzoneState,
-        importTransactions,
+        startTransactionsImport,
         resetImport,
         setStep,
+        step,
         transactions,
         valid,
         validationStatus
       }}
     >
-      <Dialog>
+      <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           <ImportButton variant="ghost" size="icon" className="rounded-full">
             <ListPlus size={24} />
@@ -232,7 +287,7 @@ export const ImportTransactions = () => {
             </DialogDescription>
           </DialogHeader>
           {step === 'validation' && <Validate />}
-          {step === 'review' && <Review />}
+          {step !== 'validation' && <Review />}
         </DialogContent>
       </Dialog>
     </ImportTransactionsContext.Provider>

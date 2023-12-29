@@ -1,6 +1,14 @@
+import { nanoid } from 'nanoid';
 import { z } from 'zod';
 
 import { AssetSchema } from './asset';
+
+const TransactionStatusSchema = z.enum([
+  'error',
+  'validating',
+  'importing',
+  'done'
+]);
 
 export const AddTransactionFormSchema = z.object({
   asset: AssetSchema.required(),
@@ -18,6 +26,10 @@ export const AddTransactionFormSchema = z.object({
 });
 
 export const TransactionSchema = z.object({
+  tmpid: z
+    .string()
+    .optional()
+    .transform(() => nanoid()),
   date: z.date(),
   type: z.enum(['BUY', 'SELL']),
   asset_code: z.string(),
@@ -25,7 +37,8 @@ export const TransactionSchema = z.object({
   shares: z.number(),
   cost_per_share: z.number(),
   currency: z.string(),
-  error: z.string().optional()
+  error: z.string().optional(),
+  status: TransactionStatusSchema.default('validating')
 });
 
 export const ImportTransactionSchema = z
@@ -52,3 +65,4 @@ export const ImportTransactionsSchema = z.array(ImportTransactionSchema);
 
 export type AddTransactionForm = z.infer<typeof AddTransactionFormSchema>;
 export type Transaction = z.infer<typeof ImportTransactionSchema>;
+export type TransactionStatus = z.infer<typeof TransactionStatusSchema>;
