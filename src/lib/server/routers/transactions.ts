@@ -1,21 +1,14 @@
 import z from 'zod';
 
 import { QStashQueueProvider } from '@/lib/server/container/providers/queue/implementations/qstash-queue.provider';
+import { AssetSchema } from '@/lib/server/routers/assets';
 import { ComputeHoldingInput } from '@/lib/server/routers/holdings';
 import { protectedProcedure, router } from '@/lib/server/trpc';
 import { Prisma } from '@prisma/client';
+import { TRPCError } from '@trpc/server';
 
 const addTransactionSchema = z.object({
-  asset: z.object({
-    code: z.string(),
-    exchange: z.string(),
-    shortname: z.string(),
-    sector: z.string().optional(),
-    industry: z.string().optional(),
-    type: z.string().optional(),
-    longname: z.string(),
-    source: z.string()
-  }),
+  asset: AssetSchema,
   cost_per_share: z.number(),
   currency_id: z.string(),
   date: z.date(),
@@ -58,6 +51,17 @@ export const transactionsRouter = router({
     .input(addTransactionSchema)
     .output(transactionSchema)
     .mutation(async ({ ctx: { db, userId }, input }) => {
+      const existingPortfolio = await db.portfolio.findUnique({
+        where: { id: input.portfolio_id }
+      });
+
+      if (!existingPortfolio) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Portfolio not found'
+        });
+      }
+
       const { id: asset_id } = await db.asset.upsert({
         create: input.asset,
         update: input.asset,

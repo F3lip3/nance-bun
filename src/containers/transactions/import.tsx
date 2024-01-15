@@ -27,10 +27,15 @@ import { usePortfolio } from '@/hooks/use-portfolio';
 import { AssetEntity } from '@/lib/server/routers/assets';
 import { trpc } from '@/lib/trpc/client';
 import { sleep } from '@/lib/utils/functions';
-import { ImportTransactionsSchema, Transaction } from '@/schemas/transaction';
+import {
+  ImportTransactionsSchema,
+  Transaction,
+  TransactionStatus,
+  TransactionToImport
+} from '@/schemas/transaction';
 import { ListPlus } from '@phosphor-icons/react';
 
-type Step = 'validation' | 'review' | 'import';
+type Step = 'validation' | 'review' | 'import' | 'done';
 type ValidationStatus = 'error' | 'in_progress' | 'success';
 type ValidationType = 'assets' | 'currencies' | 'structure' | 'transactions';
 
@@ -38,10 +43,11 @@ const IMPORT_LIST_LIMIT = 100;
 
 interface ImportTransactionsContext {
   dropzoneState: DropzoneState;
+  finishImport: () => void;
   resetImport: () => void;
   setStep: Dispatch<SetStateAction<Step>>;
   startTransactionsImport: (
-    transactionsToImport: Transaction[]
+    transactionsToImport: TransactionToImport[]
   ) => Promise<void>;
   step: Step;
   transactions: Transaction[];
@@ -54,7 +60,7 @@ const ImportTransactionsContext = createContext<ImportTransactionsContext>(
 );
 
 export const ImportTransactions = () => {
-  const { portfolio } = usePortfolio();
+  const { portfolio: portfolio_id } = usePortfolio();
 
   const [assetsCodes, setAssetsCodes] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
@@ -72,6 +78,9 @@ export const ImportTransactions = () => {
 
   const { data: currencies } = trpc.currencies.getCurrencies.useQuery();
 
+  const { mutateAsync: addTransaction } =
+    trpc.transactions.addTransaction.useMutation();
+
   const dropzoneState = useDropzone({
     multiple: false,
     accept: {
@@ -79,14 +88,15 @@ export const ImportTransactions = () => {
     }
   });
 
-  const setValidation = (type: ValidationType, status: ValidationStatus) => {
-    setValidationStatus(map => new Map(map.set(type, status)));
-  };
-
   const fetchAssets = useCallback((transactions: Transaction[]) => {
     setValidation('assets', 'in_progress');
     setAssetsCodes(transactions.map(trans => trans.asset_code));
   }, []);
+
+  const finishImport = async () => {
+    setOpen(false);
+    resetImport();
+  };
 
   const fillTransactionsAssets = useCallback((assets: AssetEntity[]) => {
     setValidation('transactions', 'in_progress');
@@ -137,20 +147,34 @@ export const ImportTransactions = () => {
     [fetchAssets]
   );
 
-  const importTransactions = async (transactionsToImport: Transaction[]) => {
-    const firstTransaction = transactionsToImport.shift();
-    if (!firstTransaction) {
-      toast({ title: 'Import finished successfully.' });
-      await sleep(3000);
-      setOpen(false);
-      resetImport();
+  const importTransactions = async (
+    transactionsToImport: TransactionToImport[]
+  ) => {
+    const transactionToImport = transactionsToImport.shift();
+    if (!transactionToImport) {
+      toast({ title: 'Import process finished.' });
+      setStep('done');
       return;
+    }
+
+    let error: string = '';
+    let status: TransactionStatus = 'done';
+
+    try {
+      await addTransaction({
+        ...transactionToImport,
+        portfolio_id
+      });
+    } catch (err) {
+      status = 'error';
+      error = 'Failed to import transaction';
     }
 
     setTransactions(currentTransactions =>
       currentTransactions.map(trn => ({
         ...trn,
-        status: trn.tmpid === firstTransaction.tmpid ? 'done' : trn.status
+        status: trn.tmpid === transactionToImport.tmpid ? status : trn.status,
+        error: trn.tmpid === transactionToImport.tmpid ? error : trn.error
       }))
     );
 
@@ -166,7 +190,7 @@ export const ImportTransactions = () => {
   };
 
   const startTransactionsImport = async (
-    transactionsToImport: Transaction[]
+    transactionsToImport: TransactionToImport[]
   ) => {
     setStep('import');
     setTransactions(currentTransactions =>
@@ -183,18 +207,22 @@ export const ImportTransactions = () => {
     await importTransactions(transactionsToImport);
   };
 
+  const setValidation = (type: ValidationType, status: ValidationStatus) => {
+    setValidationStatus(map => new Map(map.set(type, status)));
+  };
+
   const validateCurrencies = useCallback(async () => {
     setValidation('currencies', 'in_progress');
     setTransactions(currentTransactions =>
       currentTransactions.map(trn => {
-        const err = currencies?.some(cr => cr.code === trn.currency)
-          ? ''
-          : 'Currency not found';
-
+        const existingCurrency = currencies?.find(
+          cr => cr.code === trn.currency
+        );
         return {
           ...trn,
-          status: err ? 'error' : trn.status,
-          error: trn.error ? trn.error : err
+          status: existingCurrency ? trn.status : 'error',
+          error: existingCurrency ? trn.error : 'Currency not found',
+          currency_id: existingCurrency?.id ?? ''
         };
       })
     );
@@ -212,7 +240,7 @@ export const ImportTransactions = () => {
     if (dropzoneState.acceptedFiles.length) {
       start();
     }
-  }, [dropzoneState.acceptedFiles, parseCsv, portfolio]);
+  }, [dropzoneState.acceptedFiles, parseCsv]);
 
   useEffect(() => {
     if (
@@ -244,9 +272,10 @@ export const ImportTransactions = () => {
     <ImportTransactionsContext.Provider
       value={{
         dropzoneState,
-        startTransactionsImport,
+        finishImport,
         resetImport,
         setStep,
+        startTransactionsImport,
         step,
         transactions,
         valid,

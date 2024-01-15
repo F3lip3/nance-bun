@@ -37,8 +37,18 @@ export const TransactionSchema = z.object({
   shares: z.number(),
   cost_per_share: z.number(),
   currency: z.string(),
+  currency_id: z.string().optional(),
   error: z.string().optional(),
   status: TransactionStatusSchema.default('validating')
+});
+
+export const TransactionToImportSchema = TransactionSchema.omit({
+  asset_code: true,
+  currency: true
+}).extend({
+  asset: AssetSchema.required(),
+  currency_id: z.string(),
+  status: z.literal('importing')
 });
 
 export const ImportTransactionSchema = z
@@ -66,3 +76,4 @@ export const ImportTransactionsSchema = z.array(ImportTransactionSchema);
 export type AddTransactionForm = z.infer<typeof AddTransactionFormSchema>;
 export type Transaction = z.infer<typeof ImportTransactionSchema>;
 export type TransactionStatus = z.infer<typeof TransactionStatusSchema>;
+export type TransactionToImport = z.infer<typeof TransactionToImportSchema>;

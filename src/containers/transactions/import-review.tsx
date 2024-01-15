@@ -17,7 +17,11 @@ import {
 } from '@/components/ui/tooltip';
 import { useImportTransactions } from '@/containers/transactions/import';
 import { cn, formatDate, formatNumber } from '@/lib/utils/functions';
-import { Transaction, TransactionStatus } from '@/schemas/transaction';
+import {
+  Transaction,
+  TransactionStatus,
+  TransactionToImport
+} from '@/schemas/transaction';
 import { CheckCircle, CircleNotch, WarningCircle } from '@phosphor-icons/react';
 import {
   ColumnDef,
@@ -147,8 +151,13 @@ export const columns: ColumnDef<Transaction>[] = [
 ];
 
 export const Review = () => {
-  const { startTransactionsImport, resetImport, setStep, step, transactions } =
-    useImportTransactions();
+  const {
+    finishImport,
+    resetImport,
+    startTransactionsImport,
+    step,
+    transactions
+  } = useImportTransactions();
 
   const table = useReactTable({
     getCoreRowModel: getCoreRowModel(),
@@ -160,7 +169,7 @@ export const Review = () => {
     await startTransactionsImport(
       table
         .getSelectedRowModel()
-        .rows.map(row => row.original as Transaction)
+        .rows.map(row => row.original as TransactionToImport)
         .filter(trn => !trn.error)
     );
   };
@@ -272,29 +281,41 @@ export const Review = () => {
         </div>
       </ScrollArea>
       <DialogFooter>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => resetImport()}
-          disabled={step === 'import'}
-        >
-          Get back
-        </Button>
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={() => handleImport()}
-          disabled={numOfSelectedRows === 0 || step === 'import'}
-        >
-          {step === 'import' ? (
-            <>
-              Importing&nbsp;&nbsp;&nbsp;
-              <ThreeDots height="16" width="16" color="white" />
-            </>
-          ) : (
-            'Import selected'
-          )}
-        </Button>
+        {step === 'done' ? (
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => finishImport()}
+          >
+            Finish
+          </Button>
+        ) : (
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => resetImport()}
+              disabled={step === 'import'}
+            >
+              Get back
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => handleImport()}
+              disabled={numOfSelectedRows === 0 || step === 'import'}
+            >
+              {step === 'import' ? (
+                <>
+                  Importing&nbsp;&nbsp;&nbsp;
+                  <ThreeDots height="16" width="16" color="white" />
+                </>
+              ) : (
+                'Import selected'
+              )}
+            </Button>
+          </>
+        )}
       </DialogFooter>
     </>
   );
