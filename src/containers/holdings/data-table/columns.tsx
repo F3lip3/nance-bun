@@ -83,7 +83,7 @@ export const HoldingsDataTableColumns: ColumnDef<HoldingEntity>[] = [
   {
     accessorKey: 'shares',
     meta: { align: 'center' },
-    accessorFn: data => formatNumber(data.shares),
+    accessorFn: data => formatNumber(data.shares, { decimalDigits: 14 }),
     header: 'Shares',
     enableSorting: true
   },

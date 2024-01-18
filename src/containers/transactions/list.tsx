@@ -26,7 +26,7 @@ const columns: ColumnDef<TransactionEntity>[] = [
   {
     header: 'Shares',
     meta: { align: 'center' },
-    accessorFn: data => formatNumber(data.shares)
+    accessorFn: data => formatNumber(data.shares, { decimalDigits: 14 })
   },
   {
     header: 'Cost per Share',

@@ -1,4 +1,4 @@
-import { PlusCircle } from '@phosphor-icons/react';
+import { PlusCircle, TrashSimple } from '@phosphor-icons/react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/popover';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/components/ui/use-toast';
+import { CategoriesManager } from '@/containers/holdings/category/manager';
 import { useHoldings } from '@/hooks/use-holdings';
 import { Table } from '@tanstack/react-table';
 import { useState } from 'react';
@@ -65,26 +66,37 @@ export function DataTableSetCategory<TData>({
         {isLoadingCategories ? (
           <Skeleton className="h-9 w-full rounded-full" />
         ) : (
-          <Command>
-            <CommandInput placeholder="Select a category" />
-            <CommandList>
-              <CommandEmpty>No results found.</CommandEmpty>
-              <CommandGroup>
-                {categories?.map(category => (
-                  <CommandItem
-                    key={category.id}
-                    onSelect={() => handleSetCategory(category.id)}
-                  >
-                    <span>{category.name}</span>
-                  </CommandItem>
-                ))}
+          <>
+            <Command>
+              <CommandInput placeholder="Select a category" />
+              <CommandList>
+                <CommandEmpty>No results found.</CommandEmpty>
+                <CommandGroup>
+                  {categories?.map(category => (
+                    <CommandItem
+                      key={category.id}
+                      onSelect={() => handleSetCategory(category.id)}
+                    >
+                      <span>{category.name}</span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
                 <CommandSeparator />
-                <CommandItem key="none" onSelect={() => handleSetCategory('')}>
-                  <span>Clear</span>
-                </CommandItem>
-              </CommandGroup>
-            </CommandList>
-          </Command>
+                <CommandGroup>
+                  <CommandItem
+                    key="none"
+                    onSelect={() => handleSetCategory('')}
+                  >
+                    <TrashSimple className="mr-2 h-4 w-4" />
+                    <span>Clear</span>
+                  </CommandItem>
+                </CommandGroup>
+              </CommandList>
+            </Command>
+            <div className="border-t p-2">
+              <CategoriesManager triggerText="Manage categories" />
+            </div>
+          </>
         )}
       </PopoverContent>
     </Popover>
