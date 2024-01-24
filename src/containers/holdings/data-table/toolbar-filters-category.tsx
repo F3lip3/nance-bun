@@ -16,15 +16,16 @@ import {
 } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useCategories } from '@/hooks/use-categories';
 import { useHoldings } from '@/hooks/use-holdings';
 import { cn } from '@/lib/utils/functions';
 import { CheckIcon, PlusCircledIcon } from '@radix-ui/react-icons';
 
 export function DataTableToolbarFiltersCategory() {
-  const { categories, selectedCategories, setSelectedCategories } =
-    useHoldings();
+  const { selectedCategories, setSelectedCategories } = useHoldings();
+  const { categories, isLoadingCategories } = useCategories();
 
-  if (!categories) {
+  if (isLoadingCategories) {
     return <Skeleton />;
   }
 
@@ -43,30 +44,32 @@ export function DataTableToolbarFiltersCategory() {
               >
                 {selectedCategories.length}
               </Badge>
-              <div className="hidden space-x-1 lg:flex">
-                {selectedCategories.length > 2 ? (
-                  <Badge
-                    variant="secondary"
-                    className="rounded-sm px-1 font-normal"
-                  >
-                    {selectedCategories.length} selected
-                  </Badge>
-                ) : (
-                  categories
-                    .filter(category =>
-                      selectedCategories.includes(category.id)
-                    )
-                    .map(category => (
-                      <Badge
-                        variant="secondary"
-                        key={category.id}
-                        className="rounded-sm px-1 font-normal"
-                      >
-                        {category.name}
-                      </Badge>
-                    ))
-                )}
-              </div>
+              {categories?.length && (
+                <div className="hidden space-x-1 lg:flex">
+                  {selectedCategories.length > 2 ? (
+                    <Badge
+                      variant="secondary"
+                      className="rounded-sm px-1 font-normal"
+                    >
+                      {selectedCategories.length} selected
+                    </Badge>
+                  ) : (
+                    categories
+                      .filter(category =>
+                        selectedCategories.includes(category.id)
+                      )
+                      .map(category => (
+                        <Badge
+                          variant="secondary"
+                          key={category.id}
+                          className="rounded-sm px-1 font-normal"
+                        >
+                          {category.name}
+                        </Badge>
+                      ))
+                  )}
+                </div>
+              )}
             </>
           )}
         </Button>
@@ -77,7 +80,7 @@ export function DataTableToolbarFiltersCategory() {
           <CommandList>
             <CommandEmpty>No results found.</CommandEmpty>
             <CommandGroup>
-              {categories.map(category => {
+              {categories?.map(category => {
                 const isSelected = selectedCategories.includes(category.id);
                 return (
                   <CommandItem

@@ -18,6 +18,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/components/ui/use-toast';
 import { CategoriesManager } from '@/containers/holdings/category/manager';
+import { useCategories } from '@/hooks/use-categories';
 import { useHoldings } from '@/hooks/use-holdings';
 import { Table } from '@tanstack/react-table';
 import { useState } from 'react';
@@ -31,8 +32,8 @@ export function DataTableSetCategory<TData>({
 }: DataTableSetCategoryProps<TData>) {
   const [open, setOpen] = useState(false);
 
-  const { isLoadingCategories, categories, setHoldingsCategory } =
-    useHoldings();
+  const { setHoldingsCategory } = useHoldings();
+  const { isLoadingCategories, categories } = useCategories();
 
   const handleSetCategory = async (category_id: string) => {
     const holdings = table

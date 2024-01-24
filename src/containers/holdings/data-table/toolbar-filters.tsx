@@ -26,32 +26,7 @@ export function DataTableToolbarFilters<TData>({
         className="h-8 w-[150px] lg:w-[250px]"
       />
       <DataTableToolbarFiltersCategory />
-
       {isLoadingHoldings && <Spinner className="animate-spin" />}
-      {/* {table.getColumn("status") && (
-          <DataTableFacetedFilter
-            column={table.getColumn("status")}
-            title="Status"
-            options={statuses}
-          />
-        )}
-        {table.getColumn("priority") && (
-          <DataTableFacetedFilter
-            column={table.getColumn("priority")}
-            title="Priority"
-            options={priorities}
-          />
-        )}
-        {isFiltered && (
-          <Button
-            variant="ghost"
-            onClick={() => table.resetColumnFilters()}
-            className="h-8 px-2 lg:px-3"
-          >
-            Reset
-            <Cross2Icon className="ml-2 h-4 w-4" />
-          </Button>
-        )} */}
     </>
   );
 }
