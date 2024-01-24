@@ -60,13 +60,9 @@ export const categoriesRouter = router({
             JSON.parse(cachedCategories)
           );
 
-          const updatedCategories = parsedCategories.splice(
-            id
-              ? parsedCategories.findIndex(ct => ct.id === id)
-              : parsedCategories.length,
-            id ? 1 : 0,
-            category
-          );
+          const updatedCategories = id
+            ? parsedCategories.map(c => (c.id === id ? category : c))
+            : [...parsedCategories, category];
 
           await cache.set(cacheKey, JSON.stringify(updatedCategories));
           await cache.expire(cacheKey, 60 * 60 * 24);
@@ -104,5 +100,56 @@ export const categoriesRouter = router({
       await cache.expire(cacheKey, 60 * 60 * 24);
 
       return categories;
+    }),
+  removeCategory: protectedProcedure
+    .input(z.string())
+    .mutation(async ({ ctx: { cache, db, userId: user_id }, input }) => {
+      const existingCategory = await db.category.findUnique({
+        where: { id: input, user_id }
+      });
+
+      if (!existingCategory) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Category not found'
+        });
+      }
+
+      await db.$transaction([
+        db.holding.updateMany({
+          where: {
+            user_id,
+            category_id: input
+          },
+          data: {
+            category_id: null
+          }
+        }),
+        db.category.update({
+          where: {
+            id: input,
+            user_id
+          },
+          data: {
+            status: 'removed',
+            removed_at: new Date()
+          }
+        })
+      ]);
+
+      const cacheKey = `user:${user_id}-categories`;
+      const cachedCategories = await cache.get(cacheKey);
+      if (cachedCategories !== null) {
+        const parsedCategories = categoriesSchema.parse(
+          JSON.parse(cachedCategories)
+        );
+
+        const remainingCategories = parsedCategories.filter(
+          c => c.id !== input
+        );
+
+        await cache.set(cacheKey, JSON.stringify(remainingCategories));
+        await cache.expire(cacheKey, 60 * 60 * 24);
+      }
     })
 });

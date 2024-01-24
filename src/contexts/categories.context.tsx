@@ -1,4 +1,4 @@
-import { createContext } from 'react';
+import { Dispatch, SetStateAction, createContext, useState } from 'react';
 
 import {
   AddCategoryEntity,
@@ -12,9 +12,12 @@ interface CategoriesProviderProps {
 
 export interface CategoriesContextData {
   addCategory: (data: AddCategoryEntity) => Promise<boolean>;
+  editCategory: CategoryEntity | null;
   categories?: CategoryEntity[];
   isLoadingCategories: boolean;
+  removeCategory: (id: string) => Promise<boolean>;
   saving: boolean;
+  setEditCategory: Dispatch<SetStateAction<CategoryEntity | null>>;
 }
 
 export const CategoriesContext = createContext<CategoriesContextData>(
@@ -24,6 +27,8 @@ export const CategoriesContext = createContext<CategoriesContextData>(
 export const CategoriesProvider: React.FC<CategoriesProviderProps> = ({
   children
 }) => {
+  const [editCategory, setEditCategory] = useState<CategoryEntity | null>(null);
+
   const {
     data: categories,
     isLoading: isLoadingCategories,
@@ -32,6 +37,9 @@ export const CategoriesProvider: React.FC<CategoriesProviderProps> = ({
 
   const { mutateAsync: addCategoryMutation, isLoading: saving } =
     trpc.categories.addCategory.useMutation();
+
+  const { mutateAsync: removeCategoryMutation } =
+    trpc.categories.removeCategory.useMutation();
 
   const addCategory = async (data: AddCategoryEntity): Promise<boolean> => {
     try {
@@ -43,9 +51,27 @@ export const CategoriesProvider: React.FC<CategoriesProviderProps> = ({
     }
   };
 
+  const removeCategory = async (id: string) => {
+    try {
+      await removeCategoryMutation(id);
+      await refetch();
+      return true;
+    } catch (err) {
+      return false;
+    }
+  };
+
   return (
     <CategoriesContext.Provider
-      value={{ addCategory, categories, isLoadingCategories, saving }}
+      value={{
+        addCategory,
+        editCategory,
+        categories,
+        isLoadingCategories,
+        removeCategory,
+        saving,
+        setEditCategory
+      }}
     >
       {children}
     </CategoriesContext.Provider>

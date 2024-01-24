@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -28,7 +28,8 @@ type categoryFormEntity = z.infer<typeof categoryFormSchema>;
 export const CategoryForm = () => {
   const [success, setSuccess] = useState<string>('');
 
-  const { addCategory, saving } = useCategories();
+  const { addCategory, editCategory, saving, setEditCategory } =
+    useCategories();
 
   const form = useForm<categoryFormEntity>({
     resolver: zodResolver(categoryFormSchema),
@@ -45,7 +46,7 @@ export const CategoryForm = () => {
 
     if (result) {
       form.reset();
-
+      setEditCategory(null);
       setSuccess(
         data.id
           ? 'Category updated successfully'
@@ -54,6 +55,7 @@ export const CategoryForm = () => {
 
       setTimeout(() => {
         setSuccess('');
+        form.setFocus('name');
       }, 3000);
     } else {
       form.setError('name', {
@@ -61,6 +63,16 @@ export const CategoryForm = () => {
       });
     }
   };
+
+  useEffect(() => {
+    if (editCategory) {
+      form.setValue('id', editCategory.id);
+      form.setValue('name', editCategory.name);
+      form.setFocus('name');
+    } else {
+      form.reset();
+    }
+  }, [editCategory, form]);
 
   return (
     <Form {...form}>
@@ -81,25 +93,38 @@ export const CategoryForm = () => {
             </FormItem>
           )}
         />
-        {!success && (
-          <Button
-            type="submit"
-            size="sm"
-            disabled={saving}
-            className="w-32 transition-all"
-          >
-            {saving && (
-              <div className="flex flex-row items-center justify-center gap-2">
-                <span>Saving</span>
-                <Spinner className="animate-spin" />
-              </div>
-            )}
-            {!saving && !success && <span>Save changes</span>}
-          </Button>
-        )}
-        {success && (
-          <span className="text-sm font-bold text-green-700">{success}</span>
-        )}
+        <div className="flex flex-row gap-2">
+          {!success && (
+            <Button
+              type="submit"
+              size="sm"
+              disabled={saving}
+              className="w-32 transition-all"
+            >
+              {saving && (
+                <div className="flex flex-row items-center justify-center gap-2">
+                  <span>Saving</span>
+                  <Spinner className="animate-spin" />
+                </div>
+              )}
+              {!saving && !success && <span>Save changes</span>}
+            </Button>
+          )}
+          {!!editCategory && (
+            <Button
+              type="reset"
+              size="sm"
+              variant="outline"
+              disabled={saving}
+              onClick={() => setEditCategory(null)}
+            >
+              Cancel
+            </Button>
+          )}
+          {success && (
+            <span className="text-sm font-bold text-green-700">{success}</span>
+          )}
+        </div>
       </form>
     </Form>
   );

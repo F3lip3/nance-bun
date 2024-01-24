@@ -5,55 +5,46 @@ import {
   TooltipContent,
   TooltipTrigger
 } from '@/components/ui/tooltip';
+import { RemoveCategory } from '@/containers/holdings/category/remove';
+import { useCategories } from '@/hooks/use-categories';
 import { CategoryEntity } from '@/lib/server/routers/categories';
-import { PencilSimpleLine, TrashSimple } from '@phosphor-icons/react';
+import { PencilSimpleLine } from '@phosphor-icons/react';
 
 interface ListItemProps {
   category: CategoryEntity;
 }
 
 export const CategoryListItem = ({ category }: ListItemProps) => {
+  const { setEditCategory } = useCategories();
+
   return (
     <div className="group relative flex flex-row items-center gap-1 rounded-sm border px-4 py-2">
       <div className="flex flex-1 flex-row text-sm">
         <span>{category.name}</span>
       </div>
+      <Button
+        size="icon"
+        variant="ghost"
+        className="invisible rounded-full group-hover:visible"
+        onClick={() => setEditCategory(category)}
+      >
+        <PencilSimpleLine size={18} />
+      </Button>
+      <RemoveCategory category={category} />
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button
-            size="icon"
-            variant="ghost"
-            className="invisible rounded-full group-hover:visible"
-          >
-            <PencilSimpleLine size={18} />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent side="left">Edit</TooltipContent>
-      </Tooltip>
-      {!category.holdings && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              size="icon"
-              variant="ghost"
-              className="invisible rounded-full group-hover:visible"
+          <span tabIndex={0}>
+            <Badge
+              variant="secondary"
+              className="ml-2 cursor-default"
+              style={{ pointerEvents: 'none' }}
             >
-              <TrashSimple size={18} />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="left">Remove</TooltipContent>
-        </Tooltip>
-      )}
-      {category.holdings && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Badge variant="secondary" className="ml-2 cursor-default">
-              {category.holdings}
+              {category.holdings ?? 0}
             </Badge>
-          </TooltipTrigger>
-          <TooltipContent side="left">Num of holdings</TooltipContent>
-        </Tooltip>
-      )}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent side="left">Num of holdings</TooltipContent>
+      </Tooltip>
     </div>
   );
 };
