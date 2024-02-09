@@ -26,7 +26,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { useHoldings } from '@/hooks/use-holdings';
 import { cn } from '@/lib/utils/functions';
-import { ArrowDown, ArrowUp } from '@phosphor-icons/react';
+import { ArrowDown, ArrowUp, Spinner } from '@phosphor-icons/react';
 
 import { Skeleton } from '@/components/ui/skeleton';
 import { HoldingEntity } from '@/lib/server/routers/holdings';
@@ -91,6 +91,14 @@ export const HoldingsDataTable = () => {
     onSortingChange: setSorting,
     state: { columnFilters, sorting }
   });
+
+  if (isLoadingHoldings) {
+    return <Spinner className="animate-spin" />;
+  }
+
+  if (!holdings?.length) {
+    return <div>No holdings found.</div>;
+  }
 
   return (
     <div className="space-y-4">

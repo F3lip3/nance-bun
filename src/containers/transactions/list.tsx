@@ -5,6 +5,7 @@ import { useTransactions } from '@/hooks/use-transactions';
 import { TransactionEntity } from '@/lib/server/routers/transactions';
 import { formatNumber } from '@/lib/utils/functions';
 
+import { Spinner } from '@phosphor-icons/react';
 import { DataTable } from '../../components/transactions/data-table';
 
 const columns: ColumnDef<TransactionEntity>[] = [
@@ -51,11 +52,11 @@ export const ListTransactions: React.FC = () => {
   const { transactions, isLoading } = useTransactions();
 
   if (isLoading) {
-    return <>Loading...</>;
+    return <Spinner className="animate-spin" />;
   }
 
   if (!transactions?.length) {
-    return <>Empty</>;
+    return <div>No transactions found.</div>;
   }
 
   return (

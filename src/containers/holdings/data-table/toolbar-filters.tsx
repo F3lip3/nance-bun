@@ -1,9 +1,9 @@
-import { Spinner } from '@phosphor-icons/react';
 import { Table } from '@tanstack/react-table';
 
 import { Input } from '@/components/ui/input';
 import { useHoldings } from '@/hooks/use-holdings';
 
+import { Skeleton } from '@/components/ui/skeleton';
 import { DataTableToolbarFiltersCategory } from './toolbar-filters-category';
 
 interface DataTableToolbarFiltersProps<TData> {
@@ -13,7 +13,15 @@ interface DataTableToolbarFiltersProps<TData> {
 export function DataTableToolbarFilters<TData>({
   table
 }: DataTableToolbarFiltersProps<TData>) {
-  const { isLoadingHoldings } = useHoldings();
+  const { isLoadingHoldings, holdings } = useHoldings();
+
+  if (isLoadingHoldings) {
+    return <Skeleton className="h-8 w-[250px]" />;
+  }
+
+  if (!holdings?.length) {
+    return <></>;
+  }
 
   return (
     <>
@@ -26,7 +34,6 @@ export function DataTableToolbarFilters<TData>({
         className="h-8 w-[150px] lg:w-[250px]"
       />
       <DataTableToolbarFiltersCategory />
-      {isLoadingHoldings && <Spinner className="animate-spin" />}
     </>
   );
 }
