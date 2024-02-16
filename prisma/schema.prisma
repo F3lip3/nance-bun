@@ -14,6 +14,12 @@ enum CategoryStatus {
   removed
 }
 
+enum ImportStatus {
+  pending
+  error
+  done
+}
+
 enum TransactionType {
   BUY
   SELL
@@ -85,6 +91,23 @@ model Currency {
   @@map(name: "currencies")
 }
 
+model File {
+  id           String       @id @default(cuid())
+  name         String
+  key          String
+  contentType  String
+  user_id      String
+  portfolio_id String
+  status       ImportStatus @default(pending)
+  created_at   DateTime     @default(now())
+  updated_at   DateTime     @updatedAt()
+
+  portfolio Portfolio @relation(fields: [portfolio_id], references: [id])
+
+  @@index([portfolio_id])
+  @@map(name: "files")
+}
+
 model Holding {
   id           String    @id @default(cuid())
   user_id      String
@@ -122,6 +145,7 @@ model Portfolio {
   transactions Transaction[]
   created_at   DateTime      @default(now())
   updated_at   DateTime      @updatedAt
+  files        File[]
 
   @@unique([name, user_id])
   @@index([currency_id])

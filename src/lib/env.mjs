@@ -16,7 +16,10 @@ export const env = createEnv({
     RAPIDAPI_URL: z.string(),
     RAPIDAPI_KEY: z.string(),
     RAPIDAPI_HOST: z.string(),
-    VERCEL_URL: z.string().optional()
+    VERCEL_URL: z.string().optional(),
+    CLOUDFLARE_ENDPOINT: z.string(),
+    CLOUDFLARE_ACCESS_KEY_ID: z.string(),
+    CLOUDFLARE_SECRET_ACCESS_KEY: z.string()
   },
   client: {
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),

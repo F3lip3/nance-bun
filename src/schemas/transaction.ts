@@ -32,23 +32,11 @@ export const TransactionSchema = z.object({
     .transform(() => nanoid()),
   date: z.date(),
   type: z.enum(['BUY', 'SELL']),
-  asset_code: z.string(),
-  asset: AssetSchema.optional(),
+  asset: z.string(),
   shares: z.number(),
   cost_per_share: z.number(),
   currency: z.string(),
-  currency_id: z.string().optional(),
-  error: z.string().optional(),
-  status: TransactionStatusSchema.default('validating')
-});
-
-export const TransactionToImportSchema = TransactionSchema.omit({
-  asset_code: true,
-  currency: true
-}).extend({
-  asset: AssetSchema.required(),
-  currency_id: z.string(),
-  status: z.literal('importing')
+  category: z.string().optional()
 });
 
 export const ImportTransactionSchema = z
@@ -58,16 +46,18 @@ export const ImportTransactionSchema = z
     z.string(),
     z.coerce.number(),
     z.coerce.number(),
+    z.string(),
     z.string()
   ])
   .transform(tuple =>
     TransactionSchema.parse({
       date: tuple[0],
       type: tuple[1],
-      asset_code: tuple[2],
+      asset: tuple[2],
       shares: tuple[3],
       cost_per_share: tuple[4],
-      currency: tuple[5]
+      currency: tuple[5],
+      category: tuple[6]
     })
   );
 
@@ -76,4 +66,3 @@ export const ImportTransactionsSchema = z.array(ImportTransactionSchema);
 export type AddTransactionForm = z.infer<typeof AddTransactionFormSchema>;
 export type Transaction = z.infer<typeof ImportTransactionSchema>;
 export type TransactionStatus = z.infer<typeof TransactionStatusSchema>;
-export type TransactionToImport = z.infer<typeof TransactionToImportSchema>;

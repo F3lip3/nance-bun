@@ -3,9 +3,13 @@ import z from 'zod';
 import { QStashQueueProvider } from '@/lib/server/container/providers/queue/implementations/qstash-queue.provider';
 import { AssetSchema } from '@/lib/server/routers/assets';
 import { ComputeHoldingInput } from '@/lib/server/routers/holdings';
-import { protectedProcedure, router } from '@/lib/server/trpc';
+import { protectedProcedure, publicProcedure, router } from '@/lib/server/trpc';
+import { r2 } from '@/lib/server/upload';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Prisma } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
+import { randomUUID } from 'crypto';
 
 const addTransactionSchema = z.object({
   asset: AssetSchema,
@@ -42,6 +46,12 @@ const transactionSchema = z.object({
 });
 
 const transactionsSchema = z.array(transactionSchema);
+
+const uploadSchema = z.object({
+  name: z.string().min(1),
+  contentType: z.string().regex(/\w+\/[-+.\w]+/),
+  portfolioId: z.string()
+});
 
 export type AddTransactionEntity = z.infer<typeof addTransactionSchema>;
 export type TransactionEntity = z.infer<typeof transactionSchema>;
@@ -156,5 +166,37 @@ export const transactionsRouter = router({
       );
 
       return transactions;
-    })
+    }),
+  uploadImportFile: publicProcedure
+    .input(uploadSchema)
+    .mutation(
+      async ({
+        ctx: { db, userId: user_id },
+        input: { name, contentType, portfolioId: portfolio_id }
+      }) => {
+        const fileKey = randomUUID().concat('-').concat(name);
+
+        const signedUrl = await getSignedUrl(
+          r2,
+          new PutObjectCommand({
+            Bucket: 'nance-import',
+            Key: fileKey,
+            ContentType: contentType
+          }),
+          { expiresIn: 600 }
+        );
+
+        await db.file.create({
+          data: {
+            name,
+            contentType,
+            user_id,
+            key: fileKey,
+            portfolio_id
+          }
+        });
+
+        return signedUrl;
+      }
+    )
 });
