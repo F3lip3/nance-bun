@@ -1,4 +1,3 @@
-import { nanoid } from 'nanoid';
 import { z } from 'zod';
 
 import { AssetSchema } from './asset';
@@ -26,10 +25,6 @@ export const AddTransactionFormSchema = z.object({
 });
 
 export const TransactionSchema = z.object({
-  tmpid: z
-    .string()
-    .optional()
-    .transform(() => nanoid()),
   date: z.date(),
   type: z.enum(['BUY', 'SELL']),
   asset: z.string(),

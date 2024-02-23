@@ -1,9 +1,11 @@
-import { useAuth } from '@clerk/nextjs';
+import { getUserAuth } from '@/lib/auth/utils';
 
 export default async function Me() {
-  const { getToken } = useAuth();
+  const userAuth = await getUserAuth();
 
-  const token = await getToken();
-
-  return <div>Token: {token}</div>;
+  return (
+    <div>
+      <pre>{JSON.stringify(userAuth, null, 2)}</pre>
+    </div>
+  );
 }

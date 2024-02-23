@@ -8,18 +8,25 @@ type AuthSession = {
       name?: string;
       email?: string;
     };
+    id?: string;
+    token?: unknown;
+    claims?: unknown;
   } | null;
   userId: string;
 };
 
 export const getUserAuth = async (): Promise<AuthSession> => {
-  const { userId } = auth();
+  const { userId, getToken, sessionId, sessionClaims } = auth();
+
   if (userId) {
     return {
       session: {
         user: {
           id: userId
-        }
+        },
+        id: sessionId,
+        token: getToken,
+        claims: sessionClaims
       },
       userId
     } as AuthSession;
