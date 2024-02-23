@@ -6,6 +6,7 @@ import { currenciesRouter } from '@/lib/server/routers/currencies';
 import { holdingsRouter } from '@/lib/server/routers/holdings';
 import { portfoliosRouter } from '@/lib/server/routers/portfolios';
 import { transactionsRouter } from '@/lib/server/routers/transactions';
+import { importTransactionsRouter } from '@/lib/server/routers/transactions-import';
 
 export const appRouter = router({
   assets: assetsRouter,
@@ -13,7 +14,8 @@ export const appRouter = router({
   currencies: currenciesRouter,
   holdings: holdingsRouter,
   portfolios: portfoliosRouter,
-  transactions: transactionsRouter
+  transactions: transactionsRouter,
+  transactionsImport: importTransactionsRouter
 });
 
 export type AppRouter = typeof appRouter;

@@ -18,6 +18,7 @@ enum ImportStatus {
   pending
   error
   done
+  in_progress
 }
 
 enum TransactionType {
@@ -91,23 +92,6 @@ model Currency {
   @@map(name: "currencies")
 }
 
-model File {
-  id           String       @id @default(cuid())
-  name         String
-  key          String
-  contentType  String
-  user_id      String
-  portfolio_id String
-  status       ImportStatus @default(pending)
-  created_at   DateTime     @default(now())
-  updated_at   DateTime     @updatedAt()
-
-  portfolio Portfolio @relation(fields: [portfolio_id], references: [id])
-
-  @@index([portfolio_id])
-  @@map(name: "files")
-}
-
 model Holding {
   id           String    @id @default(cuid())
   user_id      String
@@ -135,17 +119,18 @@ model Holding {
 }
 
 model Portfolio {
-  id           String        @id @default(cuid())
-  name         String        @db.VarChar(200)
-  currency     Currency      @relation(fields: [currency_id], references: [id])
-  currency_id  String
-  status       Status        @default(ACTIVE)
-  user_id      String
-  holdings     Holding[]
-  transactions Transaction[]
-  created_at   DateTime      @default(now())
-  updated_at   DateTime      @updatedAt
-  files        File[]
+  id          String   @id @default(cuid())
+  name        String   @db.VarChar(200)
+  currency    Currency @relation(fields: [currency_id], references: [id])
+  currency_id String
+  status      Status   @default(ACTIVE)
+  user_id     String
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  holdings            Holding[]
+  transactions        Transaction[]
+  transaction_imports TransactionImport[]
 
   @@unique([name, user_id])
   @@index([currency_id])
@@ -171,4 +156,39 @@ model Transaction {
   @@index([currency_id])
   @@index([portfolio_id])
   @@map(name: "transactions")
+}
+
+model TransactionImport {
+  id           String       @id @default(cuid())
+  user_id      String
+  portfolio_id String
+  portfolio    Portfolio    @relation(fields: [portfolio_id], references: [id])
+  status       ImportStatus @default(pending)
+  created_at   DateTime     @default(now())
+  updated_at   DateTime     @updatedAt()
+
+  assets TransactionImportAsset[]
+
+  @@index([portfolio_id])
+  @@map(name: "transaction_imports")
+}
+
+model TransactionImportAsset {
+  id                    String          @id @default(cuid())
+  transaction_import_id String
+  date                  DateTime
+  type                  TransactionType
+  asset                 String
+  shares                Decimal
+  cost_per_share        Decimal
+  currency              String
+  category              String
+  status                ImportStatus    @default(pending)
+  created_at            DateTime        @default(now())
+  updated_at            DateTime        @updatedAt()
+
+  import TransactionImport @relation(fields: [transaction_import_id], references: [id])
+
+  @@index([transaction_import_id])
+  @@map(name: "transaction_import_assets")
 }
