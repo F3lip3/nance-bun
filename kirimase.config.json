@@ -1,0 +1,10 @@
+{
+  "hasSrc": true,
+  "packages": ["prisma", "clerk", "trpc", "shadcn-ui"],
+  "preferredPackageManager": "bun",
+  "rootPath": "src/",
+  "driver": "mysql",
+  "provider": "planetscale",
+  "orm": "prismaa",
+  "auth": "clerk"
+}
